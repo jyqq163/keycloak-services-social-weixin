@@ -26,7 +26,7 @@ import org.keycloak.models.KeycloakSession;
  * @author yong.jiang
  */
 public class WeiXinIdentityProviderFactory extends AbstractIdentityProviderFactory<WeiXinIdentityProvider>
-		implements SocialIdentityProviderFactory<WeiXinIdentityProvider> {
+        implements SocialIdentityProviderFactory<WeiXinIdentityProvider> {
 
     public static final String PROVIDER_ID = "weixin";
 
@@ -41,7 +41,14 @@ public class WeiXinIdentityProviderFactory extends AbstractIdentityProviderFacto
     }
 
     @Override
+    public OAuth2IdentityProviderConfig createConfig() {
+        return new OAuth2IdentityProviderConfig();
+    }
+
+    @Override
     public String getId() {
         return PROVIDER_ID;
     }
+
+
 }
