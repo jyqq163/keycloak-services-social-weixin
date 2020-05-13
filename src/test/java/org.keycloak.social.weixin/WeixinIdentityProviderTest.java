@@ -3,7 +3,7 @@ package org.keycloak.social.weixin;
 import org.junit.*;
 
 public class WeixinIdentityProviderTest {
-//    WeiXinIdentityProvider weiXinIdentityProvider;
+    WeiXinIdentityProvider weiXinIdentityProvider;
 
     @BeforeClass
     public static void beforeClass() {
@@ -12,7 +12,7 @@ public class WeixinIdentityProviderTest {
 
     @Before
     public void before() {
-//        weiXinIdentityProvider = new WeixinIdentityProvider();
+        weiXinIdentityProvider = new WeiXinIdentityProvider(null, new org.keycloak.broker.oidc.OAuth2IdentityProviderConfig());
     }
 
     @AfterClass
