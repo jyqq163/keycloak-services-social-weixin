@@ -32,7 +32,7 @@ public class WeiXinIdentityProviderFactory extends AbstractIdentityProviderFacto
 
     @Override
     public String getName() {
-        return "WeiXin";
+        return "微信";
     }
 
     @Override
