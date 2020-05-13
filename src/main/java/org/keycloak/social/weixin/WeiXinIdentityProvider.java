@@ -29,7 +29,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.commons.codec.binary.StringUtils;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.broker.oidc.AbstractOAuth2IdentityProvider;
 import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
@@ -52,10 +51,6 @@ import org.keycloak.services.messages.Messages;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-/**
- * 
- * @author yong.jiang
- */
 public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth2IdentityProviderConfig>
 		implements SocialIdentityProvider<OAuth2IdentityProviderConfig> {
 
@@ -66,6 +61,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 	public static final String WECHAT_AUTH_URL = "https://open.weixin.qq.com/connect/oauth2/authorize";
 	public static final String WECHAT_TOKEN_URL = "https://api.weixin.qq.com/sns/oauth2/access_token";
 	public static final String WECHAT_DEFAULT_SCOPE = "snsapi_userinfo";
+	public static final String CUSTOMIZED_LOGIN_URL_FOR_PC = "customizedLoginUrl";
 
 	public static final String PROFILE_URL = "https://api.weixin.qq.com/sns/userinfo?access_token=ACCESS_TOKEN&openid=OPENID&lang=zh_CN";
 
