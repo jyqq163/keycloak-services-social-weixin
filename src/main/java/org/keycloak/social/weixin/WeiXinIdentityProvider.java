@@ -140,7 +140,8 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 			}
 			return Response.seeOther(authorizationUrl).build();
 		} catch (Exception e) {
-			throw new IdentityBrokerException("Could not create authentication request.", e);
+			throw new IdentityBrokerException("Could not create authentication request because " + e.toString(),
+					e);
 		}
 	}
 
