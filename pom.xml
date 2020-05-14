@@ -12,6 +12,12 @@
         <keycloak.version>10.0.1</keycloak.version>
     </properties>
 
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+        </repository>
+    </distributionManagement>
+
     <build>
         <plugins>
             <plugin>
