@@ -3,7 +3,7 @@
 > Wechat Login for Keycloak
 
 ![Java CI with Maven](https://github.com/Jeff-Tian/keycloak-services-social-weixin/workflows/Java%20CI%20with%20Maven/badge.svg)
-
+![Maven Package](https://github.com/Jeff-Tian/keycloak-services-social-weixin/workflows/Maven%20Package/badge.svg)
 
 ## Live Example
 
