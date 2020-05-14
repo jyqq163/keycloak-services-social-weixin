@@ -2,14 +2,24 @@ package org.keycloak.social.weixin;
 
 import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.*;
+import org.junit.runner.RunWith;
 import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
 import org.keycloak.broker.provider.AuthenticationRequest;
 import org.keycloak.broker.provider.util.IdentityBrokerState;
 import org.keycloak.social.weixin.mock.MockedAuthenticationSessionModel;
 import org.keycloak.social.weixin.mock.MockedHttpRequest;
 
+import java.util.UUID;
+
+import org.powermock.api.mockito.PowerMockito;
+import org.mockito.Mockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+
 import javax.ws.rs.core.Response;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({UUID.class, WeiXinIdentityProvider.class})
 public class WeixinIdentityProviderTest {
     WeiXinIdentityProvider weiXinIdentityProvider;
 
@@ -20,6 +30,12 @@ public class WeixinIdentityProviderTest {
 
     @Before
     public void before() {
+        UUID uuid = PowerMockito.mock(UUID.class);
+        Mockito.when(uuid.toString()).thenReturn("ccec3eea-fd08-4ca2-b83a-2921228f2480");
+
+        PowerMockito.mockStatic(UUID.class);
+        PowerMockito.when(UUID.randomUUID()).thenReturn(uuid);
+
         OAuth2IdentityProviderConfig config = new OAuth2IdentityProviderConfig();
         config.setClientId("clientId");
         weiXinIdentityProvider = new WeiXinIdentityProvider(null, config);
@@ -59,6 +75,9 @@ public class WeixinIdentityProviderTest {
         var res = weiXinIdentityProvider.performLogin(request);
 
         Assert.assertEquals("303 redirect", Response.Status.SEE_OTHER.getStatusCode(), res.getStatus());
-        Assert.assertEquals("pc goes to customized login url", "https://open.weixin.qq.com/connect/qrconnect?scope=snsapi_login&state=state.tabId.clientId&appid=clientId&redirect_uri=https%3A%2F%2Fredirect.to.customized%2Furl&nonce=ccec3eea-fd08-4ca2-b83a-2921228f2480", res.getLocation());
+        Assert.assertEquals("pc goes to customized login url", "https://open.weixin.qq" +
+                ".com/connect/qrconnect?scope=snsapi_login&state=state.tabId" +
+                ".clientId&appid=clientId&redirect_uri=https%3A%2F%2Fredirect.to" +
+                ".customized%2Furl&nonce=ccec3eea-fd08-4ca2-b83a-2921228f2480", res.getLocation().toString());
     }
 }
