@@ -80,4 +80,27 @@ public class WeixinIdentityProviderTest {
                 ".clientId&appid=clientId&redirect_uri=https%3A%2F%2Fredirect.to" +
                 ".customized%2Furl&nonce=ccec3eea-fd08-4ca2-b83a-2921228f2480", res.getLocation().toString());
     }
+
+    @Test
+    public void pcGoesToCustomizedURLIfPresent() {
+        var config = new WeixinProviderConfig();
+        config.setClientId("clientId");
+        config.setCustomizedLoginUrlForPc("https://another.url/path");
+
+        Assert.assertEquals("set config get config", "https://another.url/path", config.getCustomizedLoginUrlForPc());
+
+        weiXinIdentityProvider = new WeiXinIdentityProvider(null, config);
+
+        IdentityBrokerState state = IdentityBrokerState.decoded("state", "clientId", "tabId");
+        var authSession = new MockedAuthenticationSessionModel();
+
+        HttpRequest httpRequest = new MockedHttpRequest();
+        AuthenticationRequest request = new AuthenticationRequest(null, null, authSession, httpRequest, null, state, "https" +
+                "://redirect.to.customized/url");
+
+        var res = weiXinIdentityProvider.performLogin(request);
+
+        Assert.assertEquals("303 redirect", Response.Status.SEE_OTHER.getStatusCode(), res.getStatus());
+        Assert.assertEquals("pc goes to customized login url", "https://another.url/path", res.getLocation().toString());
+    }
 }

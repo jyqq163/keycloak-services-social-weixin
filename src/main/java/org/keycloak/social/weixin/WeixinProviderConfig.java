@@ -1,0 +1,16 @@
+package org.keycloak.social.weixin;
+
+import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
+
+import static org.keycloak.social.weixin.WeiXinIdentityProvider.CUSTOMIZED_LOGIN_URL_FOR_PC;
+
+public class WeixinProviderConfig extends OAuth2IdentityProviderConfig {
+
+    public void setCustomizedLoginUrlForPc(String customizedLoginUrlForPc) {
+        this.getConfig().put(CUSTOMIZED_LOGIN_URL_FOR_PC, customizedLoginUrlForPc);
+    }
+
+    public String getCustomizedLoginUrlForPc() {
+        return this.getConfig().get(CUSTOMIZED_LOGIN_URL_FOR_PC);
+    }
+}
