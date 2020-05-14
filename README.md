@@ -34,3 +34,7 @@ mvn install
 3 pc和wechat使用同一套账号则必须绑定同一个开放平台，否则会绑定不同账号
 
 4 wechat信息非必填,默认使用pc方式登录
+
+* 20200514
+
+1 增加 customizedLoginUrlForPc 功能。
