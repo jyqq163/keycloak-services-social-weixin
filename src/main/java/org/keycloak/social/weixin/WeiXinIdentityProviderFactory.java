@@ -37,12 +37,12 @@ public class WeiXinIdentityProviderFactory extends AbstractIdentityProviderFacto
 
     @Override
     public WeiXinIdentityProvider create(KeycloakSession session, IdentityProviderModel model) {
-        return new WeiXinIdentityProvider(session, new OAuth2IdentityProviderConfig(model));
+        return new WeiXinIdentityProvider(session, new WeixinProviderConfig(model));
     }
 
     @Override
-    public OAuth2IdentityProviderConfig createConfig() {
-        return new OAuth2IdentityProviderConfig();
+    public WeixinProviderConfig createConfig() {
+        return new WeixinProviderConfig();
     }
 
     @Override
