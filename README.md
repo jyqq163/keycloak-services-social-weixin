@@ -35,7 +35,8 @@ mvn install
 ![image](https://user-images.githubusercontent.com/3367820/82117152-fdfd0300-97a0-11ea-8e10-02c9d9838a0a.png)
 
 ## Docker 镜像
-我也打包了一个包含微信 idp 的 keycloak server docker 镜像：
+
+我也打包了一个包含[微信 idp 的 keycloak server docker 镜像](https://hub.docker.com/repository/docker/jefftian/keycloak-heroku)：
 
 ```shell script
 docker pull jefftian/keycloak-heroku:latest
