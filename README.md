@@ -1,5 +1,7 @@
 # keycloak-services-social-weixin
 
+[中文](README_zh-CN.md)
+
 > Wechat Login for Keycloak
 
 ![Java CI with Maven](https://github.com/Jeff-Tian/keycloak-services-social-weixin/workflows/Java%20CI%20with%20Maven/badge.svg)
@@ -25,6 +27,23 @@ To install the social weixin one has to:
 ```shell script
 mvn install
 ```
+
+## Maven package
+支持最新的 keycloak，你可以使用我打的包：https://github.com/Jeff-Tian/keycloak-services-social-weixin/packages/225091
+
+## 使用截图
+![image](https://user-images.githubusercontent.com/3367820/82117152-fdfd0300-97a0-11ea-8e10-02c9d9838a0a.png)
+
+## Docker 镜像
+我也打包了一个包含微信 idp 的 keycloak server docker 镜像：
+
+```shell script
+docker pull jefftian/keycloak-heroku:latest
+```
+
+## 一键部署
+点击这个按钮，可以部署一个包含微信登录的Keycloak到你自己的 Heroku：
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://dashboard.heroku.com/new?button-url=https%3A%2F%2Fgithub.com%2FJeff-Tian%2Fkeycloak-heroku&template=https%3A%2F%2Fgithub.com%2FJeff-Tian%2Fkeycloak-heroku)
 
 ## Release Notes
 
