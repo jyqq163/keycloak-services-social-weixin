@@ -73,17 +73,22 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
     public static final String OPENID = "openid";
     public static final String WECHATFLAG = "micromessenger";
+    public final WeixinIdentityCustomAuth customAuth;
 
     public WeiXinIdentityProvider(KeycloakSession session, OAuth2IdentityProviderConfig config) {
         super(session, config);
         config.setAuthorizationUrl(AUTH_URL);
         config.setTokenUrl(TOKEN_URL);
+
+        this.customAuth = new WeixinIdentityCustomAuth(session, config);
     }
 
     public WeiXinIdentityProvider(KeycloakSession session, WeixinProviderConfig config) {
         super(session, config);
         config.setAuthorizationUrl(AUTH_URL);
         config.setTokenUrl(TOKEN_URL);
+
+        this.customAuth = new WeixinIdentityCustomAuth(session, config);
     }
 
     @Override
@@ -119,7 +124,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         }
         BrokeredIdentityContext context = null;
         try {
-            JsonNode profile = null;
+            JsonNode profile;
             if (wechat) {
                 String openid = extractTokenFromResponse(response, "openid");
                 String url = PROFILE_URL.replace("ACCESS_TOKEN", accessToken).replace("OPENID", openid);
@@ -263,8 +268,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
         @GET
         public Response authResponse(@QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_STATE) String state,
-                                     @QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_CODE) String authorizationCode,
-                                     @QueryParam(OAuth2Constants.ERROR) String error) {
+                                     @QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_CODE) String authorizationCode, @QueryParam(OAuth2Constants.ERROR) String error, @QueryParam(OAuth2Constants.SCOPE_OPENID) String openid) {
             logger.info("OAUTH2_PARAMETER_CODE=" + authorizationCode);
             boolean wechatFlag = false;
             if (headers != null && isWechatBrowser(headers.getHeaderString("user-agent").toLowerCase())) {
@@ -284,7 +288,12 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
             }
 
             try {
-                BrokeredIdentityContext federatedIdentity = null;
+                BrokeredIdentityContext federatedIdentity;
+
+                if (openid != null) {
+                    return callback.authenticated(customAuth.auth(openid));
+                }
+
                 if (authorizationCode != null) {
                     String response = generateTokenRequest(authorizationCode, wechatFlag).asString();
                     logger.info("response=" + response);
