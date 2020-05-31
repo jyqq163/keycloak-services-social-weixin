@@ -28,6 +28,12 @@ To install the social weixin one has to:
 mvn install
 ```
 
+## Develop
+
+```shell script
+mvn clean test
+```
+
 ## Maven package
 支持最新的 keycloak，你可以使用我打的包：https://github.com/Jeff-Tian/keycloak-services-social-weixin/packages/225091
 
