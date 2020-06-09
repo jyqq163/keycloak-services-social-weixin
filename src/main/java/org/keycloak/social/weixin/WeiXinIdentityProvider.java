@@ -80,7 +80,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         config.setAuthorizationUrl(AUTH_URL);
         config.setTokenUrl(TOKEN_URL);
 
-        this.customAuth = new WeixinIdentityCustomAuth(session, config);
+        customAuth = new WeixinIdentityCustomAuth(session, config);
     }
 
     public WeiXinIdentityProvider(KeycloakSession session, WeixinProviderConfig config) {
@@ -88,7 +88,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         config.setAuthorizationUrl(AUTH_URL);
         config.setTokenUrl(TOKEN_URL);
 
-        this.customAuth = new WeixinIdentityCustomAuth(session, config);
+        customAuth = new WeixinIdentityCustomAuth(session, config);
     }
 
     @Override
@@ -291,6 +291,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                 BrokeredIdentityContext federatedIdentity;
 
                 if (openid != null) {
+                    System.out.println("customAuth = " + customAuth.toString());
                     return callback.authenticated(customAuth.auth(openid));
                 }
 
