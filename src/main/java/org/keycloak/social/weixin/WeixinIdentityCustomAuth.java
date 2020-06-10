@@ -12,8 +12,11 @@ import java.io.IOException;
 public class WeixinIdentityCustomAuth extends AbstractOAuth2IdentityProvider<OAuth2IdentityProviderConfig>
         implements SocialIdentityProvider<OAuth2IdentityProviderConfig> {
 
-    public WeixinIdentityCustomAuth(KeycloakSession session, OAuth2IdentityProviderConfig config) {
+    private WeiXinIdentityProvider weiXinIdentityProvider;
+
+    public WeixinIdentityCustomAuth(KeycloakSession session, OAuth2IdentityProviderConfig config, WeiXinIdentityProvider weiXinIdentityProvider) {
         super(session, config);
+        this.weiXinIdentityProvider = weiXinIdentityProvider;
     }
 
     // TODO: cache mechanism
@@ -40,6 +43,8 @@ public class WeixinIdentityCustomAuth extends AbstractOAuth2IdentityProvider<OAu
         var profile = SimpleHttp.doGet(String.format("https://api.weixin.qq.com/cgi-bin/user/info?access_token=%s&openid" +
                 "=%s&lang=zh_CN", accessToken, openid), this.session).asJson();
 
-        return extractIdentityFromProfile(null, profile);
+        System.out.println("profile is " + profile);
+
+        return this.weiXinIdentityProvider.extractIdentityFromProfile(null, profile);
     }
 }
