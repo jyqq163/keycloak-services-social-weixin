@@ -291,8 +291,9 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                 BrokeredIdentityContext federatedIdentity;
 
                 if (openid != null) {
-                    System.out.println("customAuth = " + customAuth.toString());
-                    return callback.authenticated(customAuth.auth(openid));
+                    federatedIdentity = customAuth.auth(openid);
+
+                    return LoginWithFederatedIdentity(state, federatedIdentity, customAuth.accessToken);
                 }
 
                 if (authorizationCode != null) {
@@ -300,16 +301,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                     logger.info("response=" + response);
                     federatedIdentity = getFederatedIdentity(response, wechatFlag);
 
-                    if (getConfig().isStoreToken()) {
-                        if (federatedIdentity.getToken() == null)
-                            federatedIdentity.setToken(response);
-                    }
-
-                    federatedIdentity.setIdpConfig(getConfig());
-                    federatedIdentity.setIdp(WeiXinIdentityProvider.this);
-                    federatedIdentity.setCode(state);
-
-                    return callback.authenticated(federatedIdentity);
+                    return LoginWithFederatedIdentity(state, federatedIdentity, response);
                 }
             } catch (WebApplicationException e) {
                 return e.getResponse();
@@ -320,6 +312,19 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
             event.error(Errors.IDENTITY_PROVIDER_LOGIN_FAILURE);
             return ErrorPage.error(session, null, Response.Status.BAD_GATEWAY,
                     Messages.IDENTITY_PROVIDER_UNEXPECTED_ERROR);
+        }
+
+        public Response LoginWithFederatedIdentity(@QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_STATE) String state, BrokeredIdentityContext federatedIdentity, String accessToken) {
+            if (getConfig().isStoreToken()) {
+                if (federatedIdentity.getToken() == null)
+                    federatedIdentity.setToken(accessToken);
+            }
+
+            federatedIdentity.setIdpConfig(getConfig());
+            federatedIdentity.setIdp(WeiXinIdentityProvider.this);
+            federatedIdentity.setCode(state);
+
+            return callback.authenticated(federatedIdentity);
         }
 
         public SimpleHttp generateTokenRequest(String authorizationCode) {

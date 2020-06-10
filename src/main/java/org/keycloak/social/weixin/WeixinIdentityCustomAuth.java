@@ -13,6 +13,7 @@ public class WeixinIdentityCustomAuth extends AbstractOAuth2IdentityProvider<OAu
         implements SocialIdentityProvider<OAuth2IdentityProviderConfig> {
 
     private WeiXinIdentityProvider weiXinIdentityProvider;
+    public String accessToken;
 
     public WeixinIdentityCustomAuth(KeycloakSession session, OAuth2IdentityProviderConfig config, WeiXinIdentityProvider weiXinIdentityProvider) {
         super(session, config);
@@ -29,6 +30,7 @@ public class WeixinIdentityCustomAuth extends AbstractOAuth2IdentityProvider<OAu
         var accessToken = this.extractTokenFromResponse(res, "access_token");
 //        var expiresIn = this.extractTokenFromResponse(res, "expires_in");
 
+        this.accessToken = accessToken;
         return accessToken;
     }
 
@@ -42,6 +44,7 @@ public class WeixinIdentityCustomAuth extends AbstractOAuth2IdentityProvider<OAu
 
         var profile = SimpleHttp.doGet(String.format("https://api.weixin.qq.com/cgi-bin/user/info?access_token=%s&openid" +
                 "=%s&lang=zh_CN", accessToken, openid), this.session).asJson();
+
 
         System.out.println("profile is " + profile);
 
