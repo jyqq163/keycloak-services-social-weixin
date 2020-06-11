@@ -18,6 +18,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import javax.ws.rs.core.Response;
 
+import static org.keycloak.social.weixin.WeiXinIdentityProvider.WECHAT_APPID_KEY;
+
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({UUID.class, WeiXinIdentityProvider.class})
 public class WeixinIdentityProviderTest {
@@ -85,6 +87,7 @@ public class WeixinIdentityProviderTest {
     public void pcGoesToCustomizedURLIfPresent() {
         var config = new WeixinProviderConfig();
         config.setClientId("clientId");
+        config.setClientId2(WECHAT_APPID_KEY);
         config.setCustomizedLoginUrlForPc("https://another.url/path");
 
         Assert.assertEquals("set config get config", "https://another.url/path", config.getCustomizedLoginUrlForPc());
@@ -95,12 +98,14 @@ public class WeixinIdentityProviderTest {
         var authSession = new MockedAuthenticationSessionModel();
 
         HttpRequest httpRequest = new MockedHttpRequest();
-        AuthenticationRequest request = new AuthenticationRequest(null, null, authSession, httpRequest, null, state, "https" +
+        AuthenticationRequest request = new AuthenticationRequest(null, null, authSession, httpRequest, null, state,
+                "https" +
                 "://redirect.to.customized/url");
 
         var res = weiXinIdentityProvider.performLogin(request);
 
         Assert.assertEquals("303 redirect", Response.Status.SEE_OTHER.getStatusCode(), res.getStatus());
-        Assert.assertEquals("pc goes to customized login url", "https://another.url/path", res.getLocation().toString());
+        Assert.assertEquals("pc goes to customized login url", true,
+                res.getLocation().toString().startsWith("https://another.url/path"));
     }
 }

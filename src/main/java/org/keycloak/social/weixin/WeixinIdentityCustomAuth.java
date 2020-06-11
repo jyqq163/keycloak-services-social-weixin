@@ -12,7 +12,7 @@ import java.io.IOException;
 public class WeixinIdentityCustomAuth extends AbstractOAuth2IdentityProvider<OAuth2IdentityProviderConfig>
         implements SocialIdentityProvider<OAuth2IdentityProviderConfig> {
 
-    private WeiXinIdentityProvider weiXinIdentityProvider;
+    private final WeiXinIdentityProvider weiXinIdentityProvider;
     public String accessToken;
 
     public WeixinIdentityCustomAuth(KeycloakSession session, OAuth2IdentityProviderConfig config, WeiXinIdentityProvider weiXinIdentityProvider) {
@@ -45,9 +45,11 @@ public class WeixinIdentityCustomAuth extends AbstractOAuth2IdentityProvider<OAu
         var profile = SimpleHttp.doGet(String.format("https://api.weixin.qq.com/cgi-bin/user/info?access_token=%s&openid" +
                 "=%s&lang=zh_CN", accessToken, openid), this.session).asJson();
 
-
         System.out.println("profile is " + profile);
 
-        return this.weiXinIdentityProvider.extractIdentityFromProfile(null, profile);
+        var context = this.weiXinIdentityProvider.extractIdentityFromProfile(null, profile);
+        context.getContextData().put(FEDERATED_ACCESS_TOKEN, accessToken);
+
+        return context;
     }
 }

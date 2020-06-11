@@ -20,4 +20,8 @@ public class WeixinProviderConfig extends OAuth2IdentityProviderConfig {
     public String getCustomizedLoginUrlForPc() {
         return this.getConfig().get(CUSTOMIZED_LOGIN_URL_FOR_PC);
     }
+
+    public void setClientId2(String clientId2) {
+        this.getConfig().put("clientId2", clientId2);
+    }
 }

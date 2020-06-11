@@ -29,6 +29,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import org.jboss.resteasy.spi.HttpRequest;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.broker.oidc.AbstractOAuth2IdentityProvider;
 import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
@@ -199,6 +200,12 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                 if (customizedLoginUrlForPc != null && !customizedLoginUrlForPc.isEmpty()) {
                     uriBuilder = UriBuilder.fromUri(customizedLoginUrlForPc);
 
+                    uriBuilder.queryParam(OAUTH2_PARAMETER_SCOPE, WECHAT_DEFAULT_SCOPE)
+                            .queryParam(OAUTH2_PARAMETER_STATE, request.getState().getEncoded())
+                            .queryParam(OAUTH2_PARAMETER_RESPONSE_TYPE, "code")
+                            .queryParam(OAUTH2_PARAMETER_CLIENT_ID, getConfig().getConfig().get(WECHAT_APPID_KEY))
+                            .queryParam(OAUTH2_PARAMETER_REDIRECT_URI, request.getRedirectUri());
+
                     return uriBuilder;
                 } else {
                     uriBuilder = UriBuilder.fromUri(getConfig().getAuthorizationUrl());
@@ -260,6 +267,9 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         @Context
         protected UriInfo uriInfo;
 
+        @Context
+        protected HttpRequest request;
+
         public Endpoint(AuthenticationCallback callback, RealmModel realm, EventBuilder event) {
             this.callback = callback;
             this.realm = realm;
@@ -291,9 +301,19 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                 BrokeredIdentityContext federatedIdentity;
 
                 if (openid != null) {
+                    // TODO: use ticket here instead, and then use this ticket to get openid from sso.jiwai.win
                     federatedIdentity = customAuth.auth(openid);
 
-                    return LoginWithFederatedIdentity(state, federatedIdentity, customAuth.accessToken);
+                    setFederatedIdentity(state, federatedIdentity, customAuth.accessToken);
+
+                    logger.info(Util.inspect("federatedIdentity", federatedIdentity));
+
+                    WeiXinIdentityBrokerService weiXinIdentityBrokerService =
+                            new WeiXinIdentityBrokerService(realm);
+                    weiXinIdentityBrokerService.init(session, clientConnection, headers, event, request);
+
+                    return weiXinIdentityBrokerService.authenticated(federatedIdentity);
+//                    return callback.authenticated(federatedIdentity);
                 }
 
                 if (authorizationCode != null) {
@@ -301,12 +321,16 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                     logger.info("response=" + response);
                     federatedIdentity = getFederatedIdentity(response, wechatFlag);
 
-                    return LoginWithFederatedIdentity(state, federatedIdentity, response);
+                    setFederatedIdentity(state, federatedIdentity, response);
+
+                    logger.info(Util.inspect("federatedIdentity", federatedIdentity));
+
+                    return callback.authenticated(federatedIdentity);
                 }
             } catch (WebApplicationException e) {
                 return e.getResponse();
             } catch (Exception e) {
-                logger.error("Failed to make identity provider oauth callback", e);
+                logger.error("Failed to make identity provider (weixin) oauth callback", e);
             }
             event.event(EventType.LOGIN);
             event.error(Errors.IDENTITY_PROVIDER_LOGIN_FAILURE);
@@ -314,7 +338,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                     Messages.IDENTITY_PROVIDER_UNEXPECTED_ERROR);
         }
 
-        public Response LoginWithFederatedIdentity(@QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_STATE) String state, BrokeredIdentityContext federatedIdentity, String accessToken) {
+        public void setFederatedIdentity(@QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_STATE) String state, BrokeredIdentityContext federatedIdentity, String accessToken) {
             if (getConfig().isStoreToken()) {
                 if (federatedIdentity.getToken() == null)
                     federatedIdentity.setToken(accessToken);
@@ -323,8 +347,6 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
             federatedIdentity.setIdpConfig(getConfig());
             federatedIdentity.setIdp(WeiXinIdentityProvider.this);
             federatedIdentity.setCode(state);
-
-            return callback.authenticated(federatedIdentity);
         }
 
         public SimpleHttp generateTokenRequest(String authorizationCode) {
