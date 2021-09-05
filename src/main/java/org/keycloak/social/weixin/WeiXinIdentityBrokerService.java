@@ -29,6 +29,7 @@ import org.keycloak.models.RoleModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.models.UserSessionModel;
 import org.keycloak.models.utils.FormMessage;
+import org.keycloak.partialimport.ErrorResponseException;
 import org.keycloak.protocol.LoginProtocol;
 import org.keycloak.protocol.oidc.TokenManager;
 import org.keycloak.services.ErrorPage;
@@ -55,6 +56,7 @@ import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 
 public class WeiXinIdentityBrokerService implements IdentityProvider.AuthenticationCallback {
     private final RealmModel realmModel;
@@ -397,7 +399,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
 
         AuthenticationManager.setClientScopesInSession(authSession);
 
-        String nextRequiredAction = AuthenticationManager.nextRequiredAction(session, authSession, clientConnection, request, session.getContext().getUri(), event);
+        String nextRequiredAction = AuthenticationManager.nextRequiredAction(session, authSession, request, event);
         if (nextRequiredAction != null) {
             if ("true".equals(authSession.getAuthNote(AuthenticationProcessor.FORWARDED_PASSIVE_LOGIN))) {
                 logger.errorf("Required action %s found. Auth requests using prompt=none are incompatible with required actions", nextRequiredAction);
@@ -557,10 +559,15 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
 
 
     @Override
+    public AuthenticationSessionModel getAndVerifyAuthenticationSession(String s) {
+        return null;
+    }
+
+    @Override
     public Response authenticated(BrokeredIdentityContext context) {
         IdentityProviderModel identityProviderConfig = context.getIdpConfig();
 
-        final ParsedCodeContext parsedCode = parseEncodedSessionCode(context.getCode());
+        final ParsedCodeContext parsedCode = parseEncodedSessionCode(context.getContextData().get("state").toString());
 
         logger.info(Util.inspect("parsedCode", parsedCode));
 
@@ -659,15 +666,14 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
     }
 
     @Override
-    public Response cancelled(String s) {
-        return null;
+    public Response cancelled() {
+        throw new CancellationException("Cancelled!");
     }
 
     @Override
-    public Response error(String s, String s1) {
+    public Response error(String s) {
         return null;
     }
-
 
     public static class ParsedCodeContext {
         private ClientSessionCode<AuthenticationSessionModel> clientSessionCode;

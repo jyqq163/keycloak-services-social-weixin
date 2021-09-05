@@ -18,6 +18,7 @@ package org.keycloak.social.weixin;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.GET;
@@ -289,11 +290,11 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                 // logger.error("Failed " + getConfig().getAlias() + " broker
                 // login: " + error);
                 if (error.equals(ACCESS_DENIED)) {
-                    logger.error(ACCESS_DENIED + " for broker login " + getConfig().getProviderId());
-                    return callback.cancelled(state);
+                    logger.error(ACCESS_DENIED + " for broker login " + getConfig().getProviderId() + " " + state);
+                    return callback.cancelled();
                 } else {
                     logger.error(error + " for broker login " + getConfig().getProviderId());
-                    return callback.error(state, Messages.IDENTITY_PROVIDER_UNEXPECTED_ERROR);
+                    return callback.error(state + " " + Messages.IDENTITY_PROVIDER_UNEXPECTED_ERROR);
                 }
             }
 
@@ -346,7 +347,8 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
             federatedIdentity.setIdpConfig(getConfig());
             federatedIdentity.setIdp(WeiXinIdentityProvider.this);
-            federatedIdentity.setCode(state);
+//            federatedIdentity.setCode(state);
+            federatedIdentity.setContextData(Map.of("state", state));
         }
 
         public SimpleHttp generateTokenRequest(String authorizationCode) {
