@@ -38,7 +38,7 @@ mvn clean test
 
 - For Keycloak 7.0.0: https://github.com/Jeff-Tian/keycloak-services-social-weixin/packages/225091?version=0.0.6
 
-- For Keycloak 15.0.2: https://github.com/Jeff-Tian/keycloak-services-social-weixin/packages/225091?version=0.0.20
+- For Keycloak 15.0.2: https://github.com/Jeff-Tian/keycloak-services-social-weixin/packages/225091?version=0.0.22
 
 ## Screenshots
 
