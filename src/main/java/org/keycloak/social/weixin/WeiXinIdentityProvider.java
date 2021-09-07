@@ -287,8 +287,6 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                 wechatFlag = true;
             }
             if (error != null) {
-                // logger.error("Failed " + getConfig().getAlias() + " broker
-                // login: " + error);
                 if (error.equals(ACCESS_DENIED)) {
                     logger.error(ACCESS_DENIED + " for broker login " + getConfig().getProviderId() + " " + state);
                     return callback.cancelled();
@@ -307,26 +305,21 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
                     setFederatedIdentity(state, federatedIdentity, customAuth.accessToken);
 
-                    logger.info(Util.inspect("federatedIdentity", federatedIdentity));
+                    logger.info(Util.inspect("federatedIdentity from openid", federatedIdentity));
 
-                    WeiXinIdentityBrokerService weiXinIdentityBrokerService =
-                            new WeiXinIdentityBrokerService(realm);
-                    weiXinIdentityBrokerService.init(session, clientConnection, headers, event, request);
-
-                    return weiXinIdentityBrokerService.authenticated(federatedIdentity);
-//                    return callback.authenticated(federatedIdentity);
+                    return authenticated(federatedIdentity);
                 }
 
                 if (authorizationCode != null) {
                     String response = generateTokenRequest(authorizationCode, wechatFlag).asString();
-                    logger.info("response=" + response);
+                    logger.info("response from auth code =" + response);
                     federatedIdentity = getFederatedIdentity(response, wechatFlag);
 
                     setFederatedIdentity(state, federatedIdentity, response);
 
-                    logger.info(Util.inspect("federatedIdentity", federatedIdentity));
+                    logger.info(Util.inspect("federatedIdentity from auth code", federatedIdentity));
 
-                    return callback.authenticated(federatedIdentity);
+                    return authenticated(federatedIdentity);
                 }
             } catch (WebApplicationException e) {
                 return e.getResponse();
@@ -337,6 +330,14 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
             event.error(Errors.IDENTITY_PROVIDER_LOGIN_FAILURE);
             return ErrorPage.error(session, null, Response.Status.BAD_GATEWAY,
                     Messages.IDENTITY_PROVIDER_UNEXPECTED_ERROR);
+        }
+
+        private Response authenticated(BrokeredIdentityContext federatedIdentity) {
+            var weiXinIdentityBrokerService =
+                    new WeiXinIdentityBrokerService(realm);
+            weiXinIdentityBrokerService.init(session, clientConnection, headers, event, request);
+
+            return weiXinIdentityBrokerService.authenticated(federatedIdentity);
         }
 
         public void setFederatedIdentity(@QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_STATE) String state, BrokeredIdentityContext federatedIdentity, String accessToken) {

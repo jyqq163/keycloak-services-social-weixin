@@ -55,6 +55,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 
@@ -92,20 +93,13 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
 
         if (request != null) {
             this.request = request;
-        }else{
-
         }
 
         logger.info("initializing ... realModel = " + Util.inspect("realmModel", realmModel));
         Util.inspect("session", this.session);
         Util.inspect("clientConnection", this.clientConnection);
 
-        if (event != null) {
-            this.event = event.event(EventType.IDENTITY_PROVIDER_LOGIN);
-        } else {
-            this.event =
-                    new EventBuilder(this.realmModel, this.session, this.clientConnection).event(EventType.IDENTITY_PROVIDER_LOGIN);
-        }
+        this.event = Objects.requireNonNullElseGet(event, () -> new EventBuilder(this.realmModel, this.session, this.clientConnection)).event(EventType.IDENTITY_PROVIDER_LOGIN);
     }
 
     public WeiXinIdentityBrokerService(RealmModel realmModel) {
