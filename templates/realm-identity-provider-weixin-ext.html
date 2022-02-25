@@ -14,6 +14,20 @@
     </div>
     <kc-tooltip>{{:: 'mobile-weixin-secret.tooltip' | translate}}</kc-tooltip>
 </div>
+<div class="form-group clearfix">
+    <label class="col-md-2 control-label" for="wmpClientId">{{:: 'wmp-appid' | translate}}</label>
+    <div class="col-md-6">
+        <input class="form-control" id="wmpClientId" type="text" ng-model="identityProvider.config.wmpClientId">
+    </div>
+    <kc-tooltip>{{:: 'wmp-appid.tooltip' | translate}}</kc-tooltip>
+</div>
+<div class="form-group clearfix">
+    <label class="col-md-2 control-label" for="wmpClientSecret">{{:: 'wmp-secret' | translate}}</label>
+    <div class="col-md-6">
+        <input class="form-control" id="wmpClientSecret" kc-password ng-model="identityProvider.config.wmpClientSecret">
+    </div>
+    <kc-tooltip>{{:: 'wmp-secret.tooltip' | translate}}</kc-tooltip>
+</div>
 
 <!--<div class="form-group clearfix">-->
 <!--    <label class="col-md-2 control-label" for="defaultScope">{{:: 'default-scopes' | translate}} </label>-->

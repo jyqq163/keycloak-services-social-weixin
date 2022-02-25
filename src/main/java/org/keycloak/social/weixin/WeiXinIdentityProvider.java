@@ -73,6 +73,9 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
     public static final String WECHAT_APPID_KEY = "clientId2";
     public static final String WECHATAPPIDKEY = "clientSecret2";
 
+    public static final String WMP_APP_ID = "wmpClientId";
+    public static final String WMP_APP_SECRET = "wmpClientSecret";
+
     public static final String OPENID = "openid";
     public static final String WECHATFLAG = "micromessenger";
     public final WeixinIdentityCustomAuth customAuth;
@@ -119,7 +122,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         return user;
     }
 
-    public BrokeredIdentityContext getFederatedIdentity(String response, boolean wechat) {
+    public BrokeredIdentityContext getFederatedIdentity(String response, WechatLoginType wechatLoginType) {
         String accessToken = extractTokenFromResponse(response, getAccessTokenResponseParameter());
         if (accessToken == null) {
             throw new IdentityBrokerException("No access token available in OAuth server response: " + response);
@@ -127,8 +130,8 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         BrokeredIdentityContext context = null;
         try {
             JsonNode profile;
-            if (wechat) {
-                String openid = extractTokenFromResponse(response, "openid");
+            if (WechatLoginType.FROM_WECHAT_BROWSER.equals(wechatLoginType)) {
+                String openid = extractTokenFromResponse(response, OPENID);
                 String url = PROFILE_URL.replace("ACCESS_TOKEN", accessToken).replace("OPENID", openid);
                 profile = SimpleHttp.doGet(url, session).asJson();
             } else {
@@ -153,7 +156,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
             }
             return Response.seeOther(authorizationUrl).build();
         } catch (Exception e) {
-            throw new IdentityBrokerException("Could not create authentication request because " + e.toString(),
+            throw new IdentityBrokerException("Could not create authentication request because " + e,
                     e);
         }
     }
@@ -172,11 +175,8 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
     private boolean isWechatBrowser(String ua) {
         String wechatAppId = getConfig().getConfig().get(WECHAT_APPID_KEY);
         String wechantSecret = getConfig().getConfig().get(WECHATAPPIDKEY);
-        if (ua.indexOf(WECHATFLAG) > 0 && wechatAppId != null && wechantSecret != null
-                && wechatAppId.length() > 0 && wechantSecret.length() > 0) {
-            return true;
-        }
-        return false;
+        return ua.indexOf(WECHATFLAG) > 0 && wechatAppId != null && wechantSecret != null
+                && wechatAppId.length() > 0 && wechantSecret.length() > 0;
     }
 
 
@@ -281,10 +281,11 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         public Response authResponse(@QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_STATE) String state,
                                      @QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_CODE) String authorizationCode, @QueryParam(OAuth2Constants.ERROR) String error, @QueryParam(OAuth2Constants.SCOPE_OPENID) String openid) {
             logger.info("OAUTH2_PARAMETER_CODE=" + authorizationCode);
-            boolean wechatFlag = false;
+            var wechatLoginType = WechatLoginType.FROM_PC_QR_CODE_SCANNING;
+
             if (headers != null && isWechatBrowser(headers.getHeaderString("user-agent").toLowerCase())) {
                 logger.info("user-agent=wechat");
-                wechatFlag = true;
+                wechatLoginType = WechatLoginType.FROM_WECHAT_BROWSER;
             }
             if (error != null) {
                 if (error.equals(ACCESS_DENIED)) {
@@ -311,9 +312,9 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                 }
 
                 if (authorizationCode != null) {
-                    String response = generateTokenRequest(authorizationCode, wechatFlag).asString();
+                    String response = generateTokenRequest(authorizationCode, wechatLoginType).asString();
                     logger.info("response from auth code =" + response);
-                    federatedIdentity = getFederatedIdentity(response, wechatFlag);
+                    federatedIdentity = getFederatedIdentity(response, wechatLoginType);
 
                     setFederatedIdentity(state, federatedIdentity, response);
 
@@ -360,8 +361,8 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                     .param(OAUTH2_PARAMETER_GRANT_TYPE, OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE);
         }
 
-        public SimpleHttp generateTokenRequest(String authorizationCode, boolean wechat) {
-            if (wechat) {
+        public SimpleHttp generateTokenRequest(String authorizationCode, WechatLoginType wechatLoginType) {
+            if (WechatLoginType.FROM_WECHAT_BROWSER.equals(wechatLoginType)) {
                 return SimpleHttp.doPost(WECHAT_TOKEN_URL, session)
                         .param(OAUTH2_PARAMETER_CODE, authorizationCode)
                         .param(OAUTH2_PARAMETER_CLIENT_ID, getConfig().getConfig().get(WECHAT_APPID_KEY))
@@ -369,6 +370,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                         .param(OAUTH2_PARAMETER_REDIRECT_URI, uriInfo.getAbsolutePath().toString())
                         .param(OAUTH2_PARAMETER_GRANT_TYPE, OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE);
             }
+
             return SimpleHttp.doPost(getConfig().getTokenUrl(), session).param(OAUTH2_PARAMETER_CODE, authorizationCode)
                     .param(OAUTH2_PARAMETER_CLIENT_ID, getConfig().getClientId())
                     .param(OAUTH2_PARAMETER_CLIENT_SECRET, getConfig().getClientSecret())
