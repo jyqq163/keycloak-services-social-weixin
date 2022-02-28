@@ -143,6 +143,9 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         } catch (IOException e) {
             logger.error(e);
         }
+
+        assert context != null;
+
         context.getContextData().put(FEDERATED_ACCESS_TOKEN, accessToken);
         return context;
     }
