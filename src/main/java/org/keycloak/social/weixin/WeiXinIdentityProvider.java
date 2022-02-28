@@ -75,6 +75,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
     public static final String WMP_APP_ID = "wmpClientId";
     public static final String WMP_APP_SECRET = "wmpClientSecret";
+    public static final String WMP_AUTH_URL = "https://api.weixin.qq.com/sns/jscode2session";
 
     public static final String OPENID = "openid";
     public static final String WECHATFLAG = "micromessenger";
@@ -287,6 +288,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                 logger.info("user-agent=wechat");
                 wechatLoginType = WechatLoginType.FROM_WECHAT_BROWSER;
             }
+
             if (error != null) {
                 if (error.equals(ACCESS_DENIED)) {
                     logger.error(ACCESS_DENIED + " for broker login " + getConfig().getProviderId() + " " + state);
@@ -312,6 +314,11 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                 }
 
                 if (authorizationCode != null) {
+                    if (state == null) {
+                        wechatLoginType = WechatLoginType.FROM_WECHAT_MINI_PROGRAM;
+                        logger.info("response from wmp with code = " + authorizationCode);
+                    }
+
                     String response = generateTokenRequest(authorizationCode, wechatLoginType).asString();
                     logger.info("response from auth code =" + response);
                     federatedIdentity = getFederatedIdentity(response, wechatLoginType);
@@ -369,6 +376,10 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                         .param(OAUTH2_PARAMETER_CLIENT_SECRET, getConfig().getConfig().get(WECHATAPPIDKEY))
                         .param(OAUTH2_PARAMETER_REDIRECT_URI, uriInfo.getAbsolutePath().toString())
                         .param(OAUTH2_PARAMETER_GRANT_TYPE, OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE);
+            }
+
+            if (WechatLoginType.FROM_WECHAT_MINI_PROGRAM.equals(wechatLoginType)) {
+                return SimpleHttp.doGet(WMP_AUTH_URL, session).param(OAUTH2_PARAMETER_CLIENT_ID, getConfig().getConfig().get(WMP_APP_ID)).param(OAUTH2_PARAMETER_CLIENT_SECRET, getConfig().getConfig().get(WMP_APP_SECRET)).param("js_code", authorizationCode).param(OAUTH2_PARAMETER_GRANT_TYPE, OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE);
             }
 
             return SimpleHttp.doPost(getConfig().getTokenUrl(), session).param(OAUTH2_PARAMETER_CODE, authorizationCode)
