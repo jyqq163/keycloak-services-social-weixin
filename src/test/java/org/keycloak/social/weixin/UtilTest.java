@@ -31,4 +31,12 @@ public class UtilTest {
                 "\tauthenticationSession: null\n" +
                 "context <<<\n", inspected);
     }
+
+    @Test
+    public void inspectNull() {
+        String inspected = Util.inspect("var", null);
+        Assert.assertEquals("var >>>\n" +
+                "\tvar = null\n" +
+                "var <<<\n", inspected);
+    }
 }

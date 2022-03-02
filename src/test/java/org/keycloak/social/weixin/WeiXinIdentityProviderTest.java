@@ -2,6 +2,7 @@ package org.keycloak.social.weixin;
 
 import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.*;
+import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
 import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
 import org.keycloak.broker.provider.AuthenticationRequest;
@@ -18,11 +19,9 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import javax.ws.rs.core.Response;
 
-import static org.keycloak.social.weixin.WeiXinIdentityProvider.WECHAT_APPID_KEY;
-
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({UUID.class, WeiXinIdentityProvider.class})
-public class WeixinIdentityProviderTest {
+public class WeiXinIdentityProviderTest {
     WeiXinIdentityProvider weiXinIdentityProvider;
 
     @BeforeClass
@@ -87,7 +86,7 @@ public class WeixinIdentityProviderTest {
     public void pcGoesToCustomizedURLIfPresent() {
         var config = new WeixinProviderConfig();
         config.setClientId("clientId");
-        config.setClientId2(WECHAT_APPID_KEY);
+        config.setClientId2(WeiXinIdentityProvider.WECHAT_APPID_KEY);
         config.setCustomizedLoginUrlForPc("https://another.url/path");
 
         Assert.assertEquals("set config get config", "https://another.url/path", config.getCustomizedLoginUrlForPc());
@@ -105,7 +104,17 @@ public class WeixinIdentityProviderTest {
         var res = weiXinIdentityProvider.performLogin(request);
 
         Assert.assertEquals("303 redirect", Response.Status.SEE_OTHER.getStatusCode(), res.getStatus());
-        Assert.assertEquals("pc goes to customized login url", true,
-                res.getLocation().toString().startsWith("https://another.url/path"));
+        Assert.assertTrue("pc goes to customized login url", res.getLocation().toString().startsWith("https://another.url/path"));
+    }
+
+    @org.junit.jupiter.api.Test
+    void getFederatedIdentityForWMP() {
+//        var expected = new Object();
+//        var config = new WeixinProviderConfig();
+//        config.setWmpClientId("123456");
+//
+//        var sut = new WeiXinIdentityProvider(null, config);
+//        var res = sut.getFederatedIdentity("{\"session_key\":\"n1HE228Kq\\/i3HRlz\\/K71Aw==\",\"openid\":\"odrHN4p1UMWRdQfMK4xm9dtQXvf8\",\"unionid\":\"oLLUdsyyVLcjdxFXiOV2pZYuOdR0\"}");
+//        Assertions.assertSame(expected, res);
     }
 }

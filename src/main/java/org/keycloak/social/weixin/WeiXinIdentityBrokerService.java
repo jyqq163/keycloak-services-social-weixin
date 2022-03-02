@@ -16,20 +16,8 @@ import org.keycloak.events.Details;
 import org.keycloak.events.Errors;
 import org.keycloak.events.EventBuilder;
 import org.keycloak.events.EventType;
-import org.keycloak.models.AccountRoles;
-import org.keycloak.models.ClientModel;
-import org.keycloak.models.Constants;
-import org.keycloak.models.FederatedIdentityModel;
-import org.keycloak.models.IdentityProviderMapperModel;
-import org.keycloak.models.IdentityProviderModel;
-import org.keycloak.models.KeycloakSession;
-import org.keycloak.models.KeycloakSessionFactory;
-import org.keycloak.models.RealmModel;
-import org.keycloak.models.RoleModel;
-import org.keycloak.models.UserModel;
-import org.keycloak.models.UserSessionModel;
+import org.keycloak.models.*;
 import org.keycloak.models.utils.FormMessage;
-import org.keycloak.partialimport.ErrorResponseException;
 import org.keycloak.protocol.LoginProtocol;
 import org.keycloak.protocol.oidc.TokenManager;
 import org.keycloak.services.ErrorPage;
@@ -55,8 +43,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CancellationException;
 
 public class WeiXinIdentityBrokerService implements IdentityProvider.AuthenticationCallback {
@@ -184,7 +171,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
         }
     }
 
-    private ParsedCodeContext parseSessionCode(String code, String clientId, String tabId) {
+    private ParsedCodeContext parseSessionCode(String code, String clientId, String tabId, BrokeredIdentityContext context) {
         logger.info("parsing with code = " + code + ", clientId = " + clientId + ", tabId = " + tabId);
 
         if (code == null || clientId == null || tabId == null) {
@@ -196,12 +183,216 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
         }
 
         logger.info("check with session = " + Util.inspect("session", session));
+
+        if (code.equals("wmp")) {
+            return ParsedCodeContext.clientSessionCode(new ClientSessionCode(session, realmModel, new WechatMiniProgramSession(session, this.realmModel, new UserModel() {
+                @Override
+                public String getId() {
+                    return context.getId();
+                }
+
+                @Override
+                public String getUsername() {
+                    return context.getUsername();
+                }
+
+                @Override
+                public void setUsername(String s) {
+
+                }
+
+                @Override
+                public Long getCreatedTimestamp() {
+                    return null;
+                }
+
+                @Override
+                public void setCreatedTimestamp(Long aLong) {
+
+                }
+
+                @Override
+                public boolean isEnabled() {
+                    return true;
+                }
+
+                @Override
+                public void setEnabled(boolean b) {
+
+                }
+
+                @Override
+                public void setSingleAttribute(String s, String s1) {
+
+                }
+
+                @Override
+                public void setAttribute(String s, List<String> list) {
+
+                }
+
+                @Override
+                public void removeAttribute(String s) {
+
+                }
+
+                @Override
+                public String getFirstAttribute(String s) {
+                    return null;
+                }
+
+                @Override
+                public List<String> getAttribute(String s) {
+                    return Collections.singletonList(context.getUserAttribute(s));
+                }
+
+                @Override
+                public Map<String, List<String>> getAttributes() {
+                    return null;
+                }
+
+                @Override
+                public Set<String> getRequiredActions() {
+                    return null;
+                }
+
+                @Override
+                public void addRequiredAction(String s) {
+
+                }
+
+                @Override
+                public void removeRequiredAction(String s) {
+
+                }
+
+                @Override
+                public String getFirstName() {
+                    return context.getFirstName();
+                }
+
+                @Override
+                public void setFirstName(String s) {
+
+                }
+
+                @Override
+                public String getLastName() {
+                    return context.getLastName();
+                }
+
+                @Override
+                public void setLastName(String s) {
+
+                }
+
+                @Override
+                public String getEmail() {
+                    return context.getEmail();
+                }
+
+                @Override
+                public void setEmail(String s) {
+
+                }
+
+                @Override
+                public boolean isEmailVerified() {
+                    return true;
+                }
+
+                @Override
+                public void setEmailVerified(boolean b) {
+
+                }
+
+                @Override
+                public Set<GroupModel> getGroups() {
+                    return null;
+                }
+
+                @Override
+                public void joinGroup(GroupModel groupModel) {
+
+                }
+
+                @Override
+                public void leaveGroup(GroupModel groupModel) {
+
+                }
+
+                @Override
+                public boolean isMemberOf(GroupModel groupModel) {
+                    return false;
+                }
+
+                @Override
+                public String getFederationLink() {
+                    return null;
+                }
+
+                @Override
+                public void setFederationLink(String s) {
+
+                }
+
+                @Override
+                public String getServiceAccountClientLink() {
+                    return null;
+                }
+
+                @Override
+                public void setServiceAccountClientLink(String s) {
+
+                }
+
+                @Override
+                public Set<RoleModel> getRealmRoleMappings() {
+                    return null;
+                }
+
+                @Override
+                public Set<RoleModel> getClientRoleMappings(ClientModel clientModel) {
+                    return null;
+                }
+
+                @Override
+                public boolean hasRole(RoleModel roleModel) {
+                    return false;
+                }
+
+                @Override
+                public void grantRole(RoleModel roleModel) {
+
+                }
+
+                @Override
+                public Set<RoleModel> getRoleMappings() {
+                    return null;
+                }
+
+                @Override
+                public void deleteRoleMapping(RoleModel roleModel) {
+
+                }
+            })));
+        }
+
         SessionCodeChecks checks = new SessionCodeChecks(realmModel, session.getContext().getUri(), request, clientConnection, session, event, null, code, null, clientId, tabId, LoginActionsService.AUTHENTICATE_PATH);
+
+        logger.info(Util.inspect("checks = ", checks));
+
         checks.initialVerify();
         if (!checks.verifyActiveAndValidAction(AuthenticationSessionModel.Action.AUTHENTICATE.name(), ClientSessionCode.ActionType.LOGIN)) {
-
             AuthenticationSessionModel authSession = checks.getAuthenticationSession();
+
             if (authSession != null) {
+                logger.info(Util.inspect("authSession = ", authSession));
+
+                if (code.equals("wmp")) {
+                    return ParsedCodeContext.response(checks.getResponse());
+                }
+
                 // Check if error happened during login or during linking from account management
                 Response accountManagementFailedLinking = checkAccountManagementFailedLinking(authSession, Messages.STALE_CODE_ACCOUNT);
                 if (accountManagementFailedLinking != null) {
@@ -223,12 +414,18 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
         }
     }
 
-    private ParsedCodeContext parseEncodedSessionCode(String encodedCode) {
+    private ParsedCodeContext parseEncodedSessionCode(String encodedCode, BrokeredIdentityContext context) {
         IdentityBrokerState state = IdentityBrokerState.encoded(encodedCode);
         String code = state.getDecodedState();
         String clientId = state.getClientId();
         String tabId = state.getTabId();
-        return parseSessionCode(code, clientId, tabId);
+
+        logger.info("decoded session code = " + code + ", clientid = " + clientId + ", tabId = " + tabId);
+
+        var res = parseSessionCode(code, clientId, tabId, context);
+        logger.info("context = " + Util.inspect("context = ", res));
+
+        return res;
     }
 
     private boolean shouldPerformAccountLinking(AuthenticationSessionModel authSession, UserSessionModel userSession, String providerId) {
@@ -394,6 +591,9 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
         AuthenticationManager.setClientScopesInSession(authSession);
 
         String nextRequiredAction = AuthenticationManager.nextRequiredAction(session, authSession, request, event);
+
+        logger.info("nextRequiredAction = " + nextRequiredAction);
+
         if (nextRequiredAction != null) {
             if ("true".equals(authSession.getAuthNote(AuthenticationProcessor.FORWARDED_PASSIVE_LOGIN))) {
                 logger.errorf("Required action %s found. Auth requests using prompt=none are incompatible with required actions", nextRequiredAction);
@@ -559,9 +759,12 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
 
     @Override
     public Response authenticated(BrokeredIdentityContext context) {
+        logger.info("BrokeredIdentityContext = " + Util.inspect("BrokeredIdentityContext", context));
         IdentityProviderModel identityProviderConfig = context.getIdpConfig();
+        logger.info(Util.inspect("identityProviderConfig = ", identityProviderConfig));
 
-        final ParsedCodeContext parsedCode = parseEncodedSessionCode(context.getContextData().get("state").toString());
+        final Object state = context.getContextData().get("state");
+        final ParsedCodeContext parsedCode = parseEncodedSessionCode(state.toString(), context);
 
         logger.info(Util.inspect("parsedCode", parsedCode));
 
@@ -572,15 +775,19 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
         }
         ClientSessionCode<AuthenticationSessionModel> clientCode = parsedCode.clientSessionCode;
 
-        logger.info("client code = " + clientCode);
+        logger.info("client code = " + Util.inspect("client code = ", clientCode));
 
         String providerId = identityProviderConfig.getAlias();
+
+        logger.info(Util.inspect("identityProviderConfig = ", identityProviderConfig));
+
         if (!identityProviderConfig.isStoreToken()) {
             logger.debugf("Token will not be stored for identity provider [%s].", providerId);
             context.setToken(null);
         }
 
         AuthenticationSessionModel authenticationSession = clientCode.getClientSession();
+        logger.info(Util.inspect("authentication session = ", authenticationSession));
         context.setAuthenticationSession(authenticationSession);
 
         session.getContext().setClient(authenticationSession.getClient());
@@ -597,21 +804,43 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
 
         FederatedIdentityModel federatedIdentityModel = new FederatedIdentityModel(providerId, context.getId(),
                 context.getUsername(), context.getToken());
+        logger.info(Util.inspect("model = ", federatedIdentityModel));
 
         this.event.event(EventType.IDENTITY_PROVIDER_LOGIN)
                 .detail(Details.REDIRECT_URI, authenticationSession.getRedirectUri())
                 .detail(Details.IDENTITY_PROVIDER, providerId)
                 .detail(Details.IDENTITY_PROVIDER_USERNAME, context.getUsername());
 
+        logger.info(Util.inspect("realmModel = ", realmModel));
         UserModel federatedUser = this.session.users().getUserByFederatedIdentity(federatedIdentityModel, this.realmModel);
 
+        logger.info("Federated = " + Util.inspect("federated = ", federatedUser));
+
         // Check if federatedUser is already authenticated (this means linking social into existing federatedUser account)
-        UserSessionModel userSession = new AuthenticationSessionManager(session).getUserSession(authenticationSession);
+        final AuthenticationSessionManager authenticationSessionManager = new AuthenticationSessionManager(session);
+        logger.info(Util.inspect("authSessionManager = ", authenticationSessionManager));
+
+        UserSessionModel userSession = authenticationSessionManager.getUserSession(authenticationSession);
+
+        logger.info("user session = " + Util.inspect("userSession = ", userSession));
+
+        IdentityBrokerState theState = IdentityBrokerState.encoded(state.toString());
+
+        if (theState.getDecodedState().equals("wmp")) {
+            logger.info("it's wmp, let's return directly early. " + Util.inspect("theState", theState.getDecodedState()));
+            return finishOrRedirectToPostBrokerLogin(authenticationSession, context, true, parsedCode.clientSessionCode);
+        }
+
         if (shouldPerformAccountLinking(authenticationSession, userSession, providerId)) {
+            logger.info("linking");
             return performAccountLinking(authenticationSession, userSession, context, federatedIdentityModel, federatedUser);
         }
 
         if (federatedUser == null) {
+            if (theState.getDecodedState().equals("wmp")) {
+                logger.info("it's wmp, let's return directly. " + Util.inspect("theState", theState.getDecodedState()));
+                return finishOrRedirectToPostBrokerLogin(authenticationSession, context, false, parsedCode.clientSessionCode);
+            }
 
             logger.debugf("Federated user not found for provider '%s' and broker username '%s' . Redirecting to flow for firstBrokerLogin", providerId, context.getUsername());
 

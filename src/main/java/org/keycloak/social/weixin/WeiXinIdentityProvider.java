@@ -19,6 +19,7 @@ package org.keycloak.social.weixin;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.ws.rs.GET;
@@ -38,6 +39,7 @@ import org.keycloak.broker.oidc.mappers.AbstractJsonUserAttributeMapper;
 import org.keycloak.broker.provider.AuthenticationRequest;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.broker.provider.IdentityBrokerException;
+import org.keycloak.broker.provider.util.IdentityBrokerState;
 import org.keycloak.broker.provider.util.SimpleHttp;
 import org.keycloak.broker.social.SocialIdentityProvider;
 import org.keycloak.common.ClientConnection;
@@ -123,11 +125,13 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         return user;
     }
 
-    public BrokeredIdentityContext getFederatedIdentity(String response, WechatLoginType wechatLoginType) {
-        String accessToken = extractTokenFromResponse(response, getAccessTokenResponseParameter());
+    public BrokeredIdentityContext getFederatedIdentity(String response, WechatLoginType wechatLoginType, String response2) {
+        var accessToken = wechatLoginType.equals(WechatLoginType.FROM_WECHAT_MINI_PROGRAM) ? extractTokenFromResponse(response2, getAccessTokenResponseParameter()) : extractTokenFromResponse(response, getAccessTokenResponseParameter());
+
         if (accessToken == null) {
             throw new IdentityBrokerException("No access token available in OAuth server response: " + response);
         }
+
         BrokeredIdentityContext context = null;
         try {
             JsonNode profile;
@@ -283,7 +287,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
         @GET
         public Response authResponse(@QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_STATE) String state,
-                                     @QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_CODE) String authorizationCode, @QueryParam(OAuth2Constants.ERROR) String error, @QueryParam(OAuth2Constants.SCOPE_OPENID) String openid) {
+                                     @QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_CODE) String authorizationCode, @QueryParam(OAuth2Constants.ERROR) String error, @QueryParam(OAuth2Constants.SCOPE_OPENID) String openid, @QueryParam("clientId") String clientId, @QueryParam("tabId") String tabId) {
             logger.info("OAUTH2_PARAMETER_CODE=" + authorizationCode);
             var wechatLoginType = WechatLoginType.FROM_PC_QR_CODE_SCANNING;
 
@@ -322,13 +326,15 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                         logger.info("response from wmp with code = " + authorizationCode);
                     }
 
-                    String response = generateTokenRequest(authorizationCode, wechatLoginType).asString();
-                    logger.info("response from auth code =" + response);
-                    federatedIdentity = getFederatedIdentity(response, wechatLoginType);
-
-                    setFederatedIdentity(state, federatedIdentity, response);
+                    var responses = generateTokenRequest(authorizationCode, wechatLoginType);
+                    var response = responses[0].asString();
+                    var response2 = responses[1] != null ? responses[1].asString() : "";
+                    logger.info("response from auth code = " + response + ", " + response2);
+                    federatedIdentity = getFederatedIdentity(response, wechatLoginType, response2);
 
                     logger.info(Util.inspect("federatedIdentity from auth code", federatedIdentity));
+
+                    setFederatedIdentity(Objects.requireNonNullElse(state, IdentityBrokerState.decoded("wmp", clientId, tabId).getEncoded()), federatedIdentity, response);
 
                     return authenticated(federatedIdentity);
                 }
@@ -360,7 +366,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
             federatedIdentity.setIdpConfig(getConfig());
             federatedIdentity.setIdp(WeiXinIdentityProvider.this);
 //            federatedIdentity.setCode(state);
-            federatedIdentity.setContextData(Map.of("state", state));
+            federatedIdentity.setContextData(Map.of("state", Objects.requireNonNullElse(state, "wmp")));
         }
 
         public SimpleHttp generateTokenRequest(String authorizationCode) {
@@ -371,25 +377,31 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                     .param(OAUTH2_PARAMETER_GRANT_TYPE, OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE);
         }
 
-        public SimpleHttp generateTokenRequest(String authorizationCode, WechatLoginType wechatLoginType) {
+        public SimpleHttp[] generateTokenRequest(String authorizationCode, WechatLoginType wechatLoginType) {
             if (WechatLoginType.FROM_WECHAT_BROWSER.equals(wechatLoginType)) {
-                return SimpleHttp.doPost(WECHAT_TOKEN_URL, session)
+                return new SimpleHttp[]{SimpleHttp.doPost(WECHAT_TOKEN_URL, session)
                         .param(OAUTH2_PARAMETER_CODE, authorizationCode)
                         .param(OAUTH2_PARAMETER_CLIENT_ID, getConfig().getConfig().get(WECHAT_APPID_KEY))
                         .param(OAUTH2_PARAMETER_CLIENT_SECRET, getConfig().getConfig().get(WECHATAPPIDKEY))
                         .param(OAUTH2_PARAMETER_REDIRECT_URI, uriInfo.getAbsolutePath().toString())
-                        .param(OAUTH2_PARAMETER_GRANT_TYPE, OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE);
+                        .param(OAUTH2_PARAMETER_GRANT_TYPE, OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE), null};
             }
 
             if (WechatLoginType.FROM_WECHAT_MINI_PROGRAM.equals(wechatLoginType)) {
-                return SimpleHttp.doGet(WMP_AUTH_URL, session).param(OAUTH2_PARAMETER_CLIENT_ID, getConfig().getConfig().get(WMP_APP_ID)).param(OAUTH2_PARAMETER_CLIENT_SECRET, getConfig().getConfig().get(WMP_APP_SECRET)).param("js_code", authorizationCode).param(OAUTH2_PARAMETER_GRANT_TYPE, OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE);
+                var wechatSession = SimpleHttp.doGet(WMP_AUTH_URL, session).param(OAUTH2_PARAMETER_CLIENT_ID, getConfig().getConfig().get(WMP_APP_ID)).param(OAUTH2_PARAMETER_CLIENT_SECRET, getConfig().getConfig().get(WMP_APP_SECRET)).param("js_code", authorizationCode).param(OAUTH2_PARAMETER_GRANT_TYPE, OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE);
+
+                var tokenRes = SimpleHttp.doGet(String.format("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential" +
+                                "&appid=%s&secret=%s", getConfig().getConfig().get(WMP_APP_ID), getConfig().getConfig().get(WMP_APP_SECRET)),
+                        session);
+
+                return new SimpleHttp[]{wechatSession, tokenRes};
             }
 
-            return SimpleHttp.doPost(getConfig().getTokenUrl(), session).param(OAUTH2_PARAMETER_CODE, authorizationCode)
+            return new SimpleHttp[]{SimpleHttp.doPost(getConfig().getTokenUrl(), session).param(OAUTH2_PARAMETER_CODE, authorizationCode)
                     .param(OAUTH2_PARAMETER_CLIENT_ID, getConfig().getClientId())
                     .param(OAUTH2_PARAMETER_CLIENT_SECRET, getConfig().getClientSecret())
                     .param(OAUTH2_PARAMETER_REDIRECT_URI, uriInfo.getAbsolutePath().toString())
-                    .param(OAUTH2_PARAMETER_GRANT_TYPE, OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE);
+                    .param(OAUTH2_PARAMETER_GRANT_TYPE, OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE), null};
         }
     }
 }
