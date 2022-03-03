@@ -603,6 +603,15 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
         } else {
             event.detail(Details.CODE_ID, authSession.getParentSession().getId());  // todo This should be set elsewhere.  find out why tests fail.  Don't know where this is supposed to be set
 
+            var contextData = context.getContextData();
+            var state = contextData.get("state");
+            logger.info("login success state =  " + Util.inspect("state = ", state));
+
+            if(state.toString().startsWith("wmp")) {
+                return JsonResponse.fromJson("{\"success\": true}");
+            }
+
+
             logger.info("Login success!");
             logger.info(Util.inspect("session", session));
             logger.info(Util.inspect("request", request));
