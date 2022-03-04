@@ -328,13 +328,13 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
                     var responses = generateTokenRequest(authorizationCode, wechatLoginType);
                     var response = responses[0].asString();
-                    var response2 = responses[1] != null ? responses[1].asString() : "";
-                    logger.info("response from auth code = " + response + ", " + response2);
-                    federatedIdentity = getFederatedIdentity(response, wechatLoginType, response2);
+                    var accessTokenResponse = responses[1] != null ? responses[1].asString() : "";
+                    logger.info("response from auth code = " + response + ", " + accessTokenResponse);
+                    federatedIdentity = getFederatedIdentity(response, wechatLoginType, accessTokenResponse);
 
                     logger.info(Util.inspect("federatedIdentity from auth code", federatedIdentity));
 
-                    setFederatedIdentity(Objects.requireNonNullElse(state, IdentityBrokerState.decoded("wmp", clientId, tabId).getEncoded()), federatedIdentity, response);
+                    setFederatedIdentity(Objects.requireNonNullElse(state, WMPHelper.createStateForWMP(clientId, tabId)), federatedIdentity, response);
 
                     return authenticated(federatedIdentity);
                 }

@@ -114,15 +114,14 @@ public class WeiXinIdentityProviderTest {
 
     @org.junit.jupiter.api.Test
     void getFederatedIdentityForWMP() throws JsonProcessingException {
-
         var mockSessionKey = "n1HE228Kq\\/i3HRlz\\/K71Aw==";
         var mockUserInfo = Map.of("session_key", mockSessionKey);
 
         var mockAccessToken = "54_XzDD7MVKpVBX5m-VtsjAE9tyImVxUSKE2VgOzEBDemngNCAVwFfPr3RNusGjcBrZl2CPyQoONP4kqUI24Wl1KYZO-ZC2emmLR1bZfUPoH2FXd5iz780ZTOhb3lkDjK8zS0n31JdhXPwtPaqVDKHeAAAMTQ";
         var expectedContextData = Map.of(IdentityProvider.FEDERATED_ACCESS_TOKEN, mockAccessToken, "UserInfo", mockUserInfo);
 
-        final String response = "{\"session_key\":\"n1HE228Kq\\/i3HRlz\\/K71Aw==\",\"openid\":\"odrHN4p1UMWRdQfMK4xm9dtQXvf8\",\"unionid\":\"oLLUdsyyVLcjdxFXiOV2pZYuOdR0\"}";
-        var expectedJsonProfile = new ObjectMapper().readTree(response);
+        final String sessionKeyResponse = "{\"session_key\":\"n1HE228Kq\\/i3HRlz\\/K71Aw==\",\"openid\":\"odrHN4p1UMWRdQfMK4xm9dtQXvf8\",\"unionid\":\"oLLUdsyyVLcjdxFXiOV2pZYuOdR0\"}";
+        var expectedJsonProfile = new ObjectMapper().readTree(sessionKeyResponse);
 
         var config = new WeixinProviderConfig();
         config.setWmpClientId("123456");
@@ -133,7 +132,7 @@ public class WeiXinIdentityProviderTest {
         expectedUser.setUsername(sut.getJsonProperty(expectedJsonProfile, "openid"));
         expectedUser.setEmail("null");
 
-        var res = sut.getFederatedIdentity(response, WechatLoginType.FROM_WECHAT_MINI_PROGRAM, "{\"access_token\":\"" + mockAccessToken + "\",\"expires_in\":7200}");
+        var res = sut.getFederatedIdentity(sessionKeyResponse, WechatLoginType.FROM_WECHAT_MINI_PROGRAM, "{\"access_token\":\"" + mockAccessToken + "\",\"expires_in\":7200}");
         var contextData = res.getContextData();
         Assertions.assertNotNull(contextData);
         Assertions.assertEquals(expectedContextData.get(IdentityProvider.FEDERATED_ACCESS_TOKEN), contextData.get(IdentityProvider.FEDERATED_ACCESS_TOKEN));
