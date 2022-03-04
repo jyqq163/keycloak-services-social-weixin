@@ -50,6 +50,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
     private final RealmModel realmModel;
     private static final Logger logger = Logger.getLogger(IdentityBrokerService.class);
     public static final String LINKING_IDENTITY_PROVIDER = "LINKING_IDENTITY_PROVIDER";
+
     @Context
     private KeycloakSession session;
 
@@ -431,6 +432,9 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
     private boolean shouldPerformAccountLinking(AuthenticationSessionModel authSession, UserSessionModel userSession, String providerId) {
         logger.info("checking should performAccountLinking with userSession = " + Util.inspect("userSession", userSession));
         String noteFromSession = authSession.getAuthNote(LINKING_IDENTITY_PROVIDER);
+
+        logger.info("notefromsession = " + Util.inspect("notefromsession", noteFromSession));
+
         if (noteFromSession == null) {
             return false;
         }
@@ -613,7 +617,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
             logger.info(Util.inspect("session", session));
             logger.info(Util.inspect("request", request));
 
-            if(state.toString().startsWith("wmp")) {
+            if (state.toString().startsWith("wmp")) {
                 final AuthenticationSessionManager authenticationSessionManager = new AuthenticationSessionManager(session);
                 UserSessionModel userSession = authenticationSessionManager.getUserSession(authSession);
 
@@ -837,19 +841,16 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
         logger.info(Util.inspect("realmModel = ", realmModel));
         final UserProvider users = this.session.users();
         logger.info(Util.inspect("Users = ", users));
-        UserModel federatedUser = users.getUserByFederatedIdentity(federatedIdentityModel, this.realmModel);
-
-        logger.info("Federated = " + Util.inspect("federated = ", federatedUser));
 
         // Check if federatedUser is already authenticated (this means linking social into existing federatedUser account)
         final AuthenticationSessionManager authenticationSessionManager = new AuthenticationSessionManager(session);
         logger.info(Util.inspect("authSessionManager = ", authenticationSessionManager));
 
         UserSessionModel userSession = authenticationSessionManager.getUserSession(authenticationSession);
-
         logger.info("user session = " + Util.inspect("userSession = ", userSession));
 
-        IdentityBrokerState theState = IdentityBrokerState.encoded(state.toString());
+        UserModel federatedUser = users.getUserByFederatedIdentity(this.realmModel, federatedIdentityModel);
+        logger.info("Federated = " + Util.inspect("federated = ", federatedUser));
 
         if (shouldPerformAccountLinking(authenticationSession, userSession, providerId)) {
             logger.info("linking");
@@ -857,6 +858,8 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
         }
 
         if (federatedUser == null) {
+            IdentityBrokerState theState = IdentityBrokerState.encoded(state.toString());
+
             if (theState.getDecodedState().equals("wmp")) {
                 logger.info("it's wmp, let's return directly. " + Util.inspect("theState", theState.getDecodedState()));
                 return finishOrRedirectToPostBrokerLogin(authenticationSession, context, false, parsedCode.clientSessionCode);

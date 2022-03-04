@@ -3,6 +3,8 @@ package org.keycloak.social.weixin;
 import org.junit.Assert;
 import org.junit.Test;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
+import org.keycloak.models.KeycloakSession;
+import org.keycloak.social.weixin.mock.MockedKeycloakSession;
 
 import java.util.Map;
 
@@ -38,5 +40,13 @@ public class UtilTest {
         Assert.assertEquals("var >>>\n" +
                 "\tvar = null\n" +
                 "var <<<\n", inspected);
+    }
+
+    @Test
+    public void inspectKeycloakSession() {
+        var session = new MockedKeycloakSession();
+        var inspected = Util.inspect("session", session);
+        Assert.assertEquals("session >>>\n" +
+                "session <<<\n", inspected);
     }
 }

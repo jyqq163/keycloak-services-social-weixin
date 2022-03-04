@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class WechatMiniProgramSession implements AuthenticationSessionModel {
-    private KeycloakSession session;
+    private final KeycloakSession session;
     private final RealmModel realmModel;
     private final UserModel authenticatedUser;
 
@@ -68,7 +68,7 @@ public class WechatMiniProgramSession implements AuthenticationSessionModel {
     @Override
     public RootAuthenticationSessionModel getParentSession() {
         System.out.println("getParentSession = null, creating...");
-        var root =  this.session.authenticationSessions().createRootAuthenticationSession(this.realmModel);
+        var root = this.session.authenticationSessions().createRootAuthenticationSession(this.realmModel);
 
         System.out.println(Util.inspect("root = ", root));
 
@@ -143,12 +143,13 @@ public class WechatMiniProgramSession implements AuthenticationSessionModel {
 
     @Override
     public String getAuthNote(String s) {
-        if(s.equals(AbstractIdpAuthenticator.EXISTING_USER_INFO)){
+        if (s.equals(AbstractIdpAuthenticator.EXISTING_USER_INFO)) {
             return "null";
         }
 
-        if(s.equals(WeiXinIdentityBrokerService.LINKING_IDENTITY_PROVIDER)){
-            return "";
+        if (s.equals(WeiXinIdentityBrokerService.LINKING_IDENTITY_PROVIDER)) {
+            System.out.println("getauthnote for " + WeiXinIdentityBrokerService.LINKING_IDENTITY_PROVIDER + "; returned Boolean null");
+            return null;
         }
 
         System.out.println("Getting auth note with s = " + s + ", and I returned false for it");
@@ -172,7 +173,7 @@ public class WechatMiniProgramSession implements AuthenticationSessionModel {
 
     @Override
     public String getClientNote(String s) {
-        if(s.equals(Constants.KC_ACTION)) {
+        if (s.equals(Constants.KC_ACTION)) {
             System.out.println("Getting client note with s = " + s + ", and I returned null");
             return null;
         }
