@@ -1,15 +1,20 @@
 package org.keycloak.social.weixin;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
 import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
 import org.keycloak.broker.provider.AuthenticationRequest;
+import org.keycloak.broker.provider.BrokeredIdentityContext;
+import org.keycloak.broker.provider.IdentityProvider;
 import org.keycloak.broker.provider.util.IdentityBrokerState;
 import org.keycloak.social.weixin.mock.MockedAuthenticationSessionModel;
 import org.keycloak.social.weixin.mock.MockedHttpRequest;
 
+import java.util.Map;
 import java.util.UUID;
 
 import org.powermock.api.mockito.PowerMockito;
@@ -99,7 +104,7 @@ public class WeiXinIdentityProviderTest {
         HttpRequest httpRequest = new MockedHttpRequest();
         AuthenticationRequest request = new AuthenticationRequest(null, null, authSession, httpRequest, null, state,
                 "https" +
-                "://redirect.to.customized/url");
+                        "://redirect.to.customized/url");
 
         var res = weiXinIdentityProvider.performLogin(request);
 
@@ -108,13 +113,30 @@ public class WeiXinIdentityProviderTest {
     }
 
     @org.junit.jupiter.api.Test
-    void getFederatedIdentityForWMP() {
-//        var expected = new Object();
-//        var config = new WeixinProviderConfig();
-//        config.setWmpClientId("123456");
-//
-//        var sut = new WeiXinIdentityProvider(null, config);
-//        var res = sut.getFederatedIdentity("{\"session_key\":\"n1HE228Kq\\/i3HRlz\\/K71Aw==\",\"openid\":\"odrHN4p1UMWRdQfMK4xm9dtQXvf8\",\"unionid\":\"oLLUdsyyVLcjdxFXiOV2pZYuOdR0\"}");
-//        Assertions.assertSame(expected, res);
+    void getFederatedIdentityForWMP() throws JsonProcessingException {
+
+        var mockSessionKey = "n1HE228Kq\\/i3HRlz\\/K71Aw==";
+        var mockUserInfo = Map.of("session_key", mockSessionKey);
+
+        var mockAccessToken = "54_XzDD7MVKpVBX5m-VtsjAE9tyImVxUSKE2VgOzEBDemngNCAVwFfPr3RNusGjcBrZl2CPyQoONP4kqUI24Wl1KYZO-ZC2emmLR1bZfUPoH2FXd5iz780ZTOhb3lkDjK8zS0n31JdhXPwtPaqVDKHeAAAMTQ";
+        var expectedContextData = Map.of(IdentityProvider.FEDERATED_ACCESS_TOKEN, mockAccessToken, "UserInfo", mockUserInfo);
+
+        final String response = "{\"session_key\":\"n1HE228Kq\\/i3HRlz\\/K71Aw==\",\"openid\":\"odrHN4p1UMWRdQfMK4xm9dtQXvf8\",\"unionid\":\"oLLUdsyyVLcjdxFXiOV2pZYuOdR0\"}";
+        var expectedJsonProfile = new ObjectMapper().readTree(response);
+
+        var config = new WeixinProviderConfig();
+        config.setWmpClientId("123456");
+
+        var sut = new WeiXinIdentityProvider(null, config);
+
+        var expectedUser = new BrokeredIdentityContext(sut.getJsonProperty(expectedJsonProfile, "unionid"));
+        expectedUser.setUsername(sut.getJsonProperty(expectedJsonProfile, "openid"));
+        expectedUser.setEmail("null");
+
+        var res = sut.getFederatedIdentity(response, WechatLoginType.FROM_WECHAT_MINI_PROGRAM, "{\"access_token\":\"" + mockAccessToken + "\",\"expires_in\":7200}");
+        var contextData = res.getContextData();
+        Assertions.assertNotNull(contextData);
+        Assertions.assertEquals(expectedContextData.get(IdentityProvider.FEDERATED_ACCESS_TOKEN), contextData.get(IdentityProvider.FEDERATED_ACCESS_TOKEN));
+        Assertions.assertEquals(expectedUser.toString(), res.toString());
     }
 }

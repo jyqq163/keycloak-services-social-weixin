@@ -147,6 +147,10 @@ public class WechatMiniProgramSession implements AuthenticationSessionModel {
             return "null";
         }
 
+        if(s.equals(WeiXinIdentityBrokerService.LINKING_IDENTITY_PROVIDER)){
+            return "";
+        }
+
         System.out.println("Getting auth note with s = " + s + ", and I returned false for it");
         return "false";
     }

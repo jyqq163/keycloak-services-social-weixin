@@ -49,7 +49,7 @@ import java.util.concurrent.CancellationException;
 public class WeiXinIdentityBrokerService implements IdentityProvider.AuthenticationCallback {
     private final RealmModel realmModel;
     private static final Logger logger = Logger.getLogger(IdentityBrokerService.class);
-    private static final String LINKING_IDENTITY_PROVIDER = "LINKING_IDENTITY_PROVIDER";
+    public static final String LINKING_IDENTITY_PROVIDER = "LINKING_IDENTITY_PROVIDER";
     @Context
     private KeycloakSession session;
 
@@ -429,6 +429,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
     }
 
     private boolean shouldPerformAccountLinking(AuthenticationSessionModel authSession, UserSessionModel userSession, String providerId) {
+        logger.info("checking should performAccountLinking with userSession = " + Util.inspect("userSession", userSession));
         String noteFromSession = authSession.getAuthNote(LINKING_IDENTITY_PROVIDER);
         if (noteFromSession == null) {
             return false;
@@ -439,6 +440,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
             linkingValid = false;
         } else {
             String expectedNote = userSession.getId() + authSession.getClient().getClientId() + providerId;
+            logger.info("expecting note = " + expectedNote);
             linkingValid = expectedNote.equals(noteFromSession);
         }
 
@@ -607,14 +609,26 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
             var state = contextData.get("state");
             logger.info("login success state =  " + Util.inspect("state = ", state));
 
-            if(state.toString().startsWith("wmp")) {
-                return JsonResponse.fromJson("{\"success\": true}");
-            }
-
-
             logger.info("Login success!");
             logger.info(Util.inspect("session", session));
             logger.info(Util.inspect("request", request));
+
+            if(state.toString().startsWith("wmp")) {
+                final AuthenticationSessionManager authenticationSessionManager = new AuthenticationSessionManager(session);
+                UserSessionModel userSession = authenticationSessionManager.getUserSession(authSession);
+
+                logger.info(Util.inspect("authSessionManager", authenticationSessionManager));
+                logger.info(Util.inspect("userSession", userSession));
+                logger.info(Util.inspect("user = ", userSession.getUser()));
+                logger.info(Util.inspect("session context", session.getContext()));
+                logger.info(Util.inspect("uri = ", session.getContext().getUri()));
+                logger.info(Util.inspect("connection = ", this.clientConnection));
+
+                AuthenticationManager.createLoginCookie(this.session, realmModel, userSession.getUser(), userSession, session.getContext().getUri(), this.clientConnection);
+
+                return JsonResponse.fromJson("{\"success\": true}");
+            }
+
             return AuthenticationManager.finishedRequiredActions(session, authSession, null, clientConnection, request, session.getContext().getUri(), event);
         }
     }
@@ -821,7 +835,9 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
                 .detail(Details.IDENTITY_PROVIDER_USERNAME, context.getUsername());
 
         logger.info(Util.inspect("realmModel = ", realmModel));
-        UserModel federatedUser = this.session.users().getUserByFederatedIdentity(federatedIdentityModel, this.realmModel);
+        final UserProvider users = this.session.users();
+        logger.info(Util.inspect("Users = ", users));
+        UserModel federatedUser = users.getUserByFederatedIdentity(federatedIdentityModel, this.realmModel);
 
         logger.info("Federated = " + Util.inspect("federated = ", federatedUser));
 
@@ -834,11 +850,6 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
         logger.info("user session = " + Util.inspect("userSession = ", userSession));
 
         IdentityBrokerState theState = IdentityBrokerState.encoded(state.toString());
-
-        if (theState.getDecodedState().equals("wmp")) {
-            logger.info("it's wmp, let's return directly early. " + Util.inspect("theState", theState.getDecodedState()));
-            return finishOrRedirectToPostBrokerLogin(authenticationSession, context, true, parsedCode.clientSessionCode);
-        }
 
         if (shouldPerformAccountLinking(authenticationSession, userSession, providerId)) {
             logger.info("linking");
