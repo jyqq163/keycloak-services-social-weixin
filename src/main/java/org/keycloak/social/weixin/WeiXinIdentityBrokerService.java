@@ -7,7 +7,10 @@ import org.keycloak.authentication.AuthenticationProcessor;
 import org.keycloak.authentication.authenticators.broker.AbstractIdpAuthenticator;
 import org.keycloak.authentication.authenticators.broker.util.PostBrokerLoginConstants;
 import org.keycloak.authentication.authenticators.broker.util.SerializedBrokeredIdentityContext;
-import org.keycloak.broker.provider.*;
+import org.keycloak.broker.provider.BrokeredIdentityContext;
+import org.keycloak.broker.provider.IdentityBrokerException;
+import org.keycloak.broker.provider.IdentityProvider;
+import org.keycloak.broker.provider.IdentityProviderMapper;
 import org.keycloak.broker.provider.util.IdentityBrokerState;
 import org.keycloak.common.ClientConnection;
 import org.keycloak.common.util.ObjectUtil;
@@ -921,20 +924,4 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
         return null;
     }
 
-    public static class ParsedCodeContext {
-        private ClientSessionCode<AuthenticationSessionModel> clientSessionCode;
-        private Response response;
-
-        public static ParsedCodeContext clientSessionCode(ClientSessionCode<AuthenticationSessionModel> clientSessionCode) {
-            ParsedCodeContext ctx = new ParsedCodeContext();
-            ctx.clientSessionCode = clientSessionCode;
-            return ctx;
-        }
-
-        public static ParsedCodeContext response(Response response) {
-            ParsedCodeContext ctx = new ParsedCodeContext();
-            ctx.response = response;
-            return ctx;
-        }
-    }
 }
