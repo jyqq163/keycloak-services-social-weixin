@@ -7,6 +7,7 @@ import org.keycloak.authentication.AuthenticationProcessor;
 import org.keycloak.authentication.authenticators.broker.AbstractIdpAuthenticator;
 import org.keycloak.authentication.authenticators.broker.util.PostBrokerLoginConstants;
 import org.keycloak.authentication.authenticators.broker.util.SerializedBrokeredIdentityContext;
+import org.keycloak.broker.oidc.mappers.AbstractJsonUserAttributeMapper;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.broker.provider.IdentityBrokerException;
 import org.keycloak.broker.provider.IdentityProvider;
@@ -50,7 +51,7 @@ import java.util.*;
 import java.util.concurrent.CancellationException;
 
 public class WeiXinIdentityBrokerService implements IdentityProvider.AuthenticationCallback {
-    private final RealmModel realmModel;
+    public final RealmModel realmModel;
     private static final Logger logger = Logger.getLogger(IdentityBrokerService.class);
     public static final String LINKING_IDENTITY_PROVIDER = "LINKING_IDENTITY_PROVIDER";
 
@@ -189,197 +190,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
         logger.info("check with session = " + Util.inspect("session", session));
 
         if (code.equals("wmp")) {
-            return ParsedCodeContext.clientSessionCode(new ClientSessionCode(session, realmModel, new WechatMiniProgramSession(session, this.realmModel, new UserModel() {
-                @Override
-                public String getId() {
-                    return context.getId();
-                }
-
-                @Override
-                public String getUsername() {
-                    return context.getUsername();
-                }
-
-                @Override
-                public void setUsername(String s) {
-
-                }
-
-                @Override
-                public Long getCreatedTimestamp() {
-                    return null;
-                }
-
-                @Override
-                public void setCreatedTimestamp(Long aLong) {
-
-                }
-
-                @Override
-                public boolean isEnabled() {
-                    return true;
-                }
-
-                @Override
-                public void setEnabled(boolean b) {
-
-                }
-
-                @Override
-                public void setSingleAttribute(String s, String s1) {
-
-                }
-
-                @Override
-                public void setAttribute(String s, List<String> list) {
-
-                }
-
-                @Override
-                public void removeAttribute(String s) {
-
-                }
-
-                @Override
-                public String getFirstAttribute(String s) {
-                    return null;
-                }
-
-                @Override
-                public List<String> getAttribute(String s) {
-                    return Collections.singletonList(context.getUserAttribute(s));
-                }
-
-                @Override
-                public Map<String, List<String>> getAttributes() {
-                    return null;
-                }
-
-                @Override
-                public Set<String> getRequiredActions() {
-                    return null;
-                }
-
-                @Override
-                public void addRequiredAction(String s) {
-
-                }
-
-                @Override
-                public void removeRequiredAction(String s) {
-
-                }
-
-                @Override
-                public String getFirstName() {
-                    return context.getFirstName();
-                }
-
-                @Override
-                public void setFirstName(String s) {
-
-                }
-
-                @Override
-                public String getLastName() {
-                    return context.getLastName();
-                }
-
-                @Override
-                public void setLastName(String s) {
-
-                }
-
-                @Override
-                public String getEmail() {
-                    return context.getEmail();
-                }
-
-                @Override
-                public void setEmail(String s) {
-
-                }
-
-                @Override
-                public boolean isEmailVerified() {
-                    return true;
-                }
-
-                @Override
-                public void setEmailVerified(boolean b) {
-
-                }
-
-                @Override
-                public Set<GroupModel> getGroups() {
-                    return null;
-                }
-
-                @Override
-                public void joinGroup(GroupModel groupModel) {
-
-                }
-
-                @Override
-                public void leaveGroup(GroupModel groupModel) {
-
-                }
-
-                @Override
-                public boolean isMemberOf(GroupModel groupModel) {
-                    return false;
-                }
-
-                @Override
-                public String getFederationLink() {
-                    return null;
-                }
-
-                @Override
-                public void setFederationLink(String s) {
-
-                }
-
-                @Override
-                public String getServiceAccountClientLink() {
-                    return null;
-                }
-
-                @Override
-                public void setServiceAccountClientLink(String s) {
-
-                }
-
-                @Override
-                public Set<RoleModel> getRealmRoleMappings() {
-                    return null;
-                }
-
-                @Override
-                public Set<RoleModel> getClientRoleMappings(ClientModel clientModel) {
-                    return null;
-                }
-
-                @Override
-                public boolean hasRole(RoleModel roleModel) {
-                    return false;
-                }
-
-                @Override
-                public void grantRole(RoleModel roleModel) {
-
-                }
-
-                @Override
-                public Set<RoleModel> getRoleMappings() {
-                    return null;
-                }
-
-                @Override
-                public void deleteRoleMapping(RoleModel roleModel) {
-
-                }
-            })));
+            return ParsedCodeContext.clientSessionCode(WMPHelper.getClientSessionCode(this, realmModel, session, context));
         }
 
         SessionCodeChecks checks = new SessionCodeChecks(realmModel, session.getContext().getUri(), request, clientConnection, session, event, null, code, null, clientId, tabId, LoginActionsService.AUTHENTICATE_PATH);
@@ -614,7 +425,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
 
             var contextData = context.getContextData();
             var state = contextData.get("state");
-            logger.info("login success state =  " + Util.inspect("state = ", state));
+            logger.info("login success state =  " + Util.inspect("state = ", state.toString()));
 
             logger.info("Login success!");
             logger.info(Util.inspect("session", session));
@@ -623,6 +434,10 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
             if (state.toString().startsWith("wmp")) {
                 final AuthenticationSessionManager authenticationSessionManager = new AuthenticationSessionManager(session);
                 UserSessionModel userSession = authenticationSessionManager.getUserSession(authSession);
+
+                if(userSession == null){
+                    userSession = WMPHelper.getUserSessionModel(context, federatedUser, authSession, providerId, session);
+                }
 
                 logger.info(Util.inspect("authSessionManager", authenticationSessionManager));
                 logger.info(Util.inspect("userSession", userSession));
@@ -633,7 +448,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
 
                 AuthenticationManager.createLoginCookie(this.session, realmModel, userSession.getUser(), userSession, session.getContext().getUri(), this.clientConnection);
 
-                return JsonResponse.fromJson("{\"success\": true}");
+                return JsonResponse.fromJson(JsonHelper.stringify(userSession));
             }
 
             return AuthenticationManager.finishedRequiredActions(session, authSession, null, clientConnection, request, session.getContext().getUri(), event);
@@ -741,6 +556,9 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
             if (firstBrokerLoginInProgress) {
                 logger.debugf("Reauthenticated with broker '%s' when linking user '%s' with other broker", context.getIdpConfig().getAlias(), federatedUser.getUsername());
 
+                logger.info("linking user is " + Util.inspect("session", session));
+                logger.info("linking user ream" + Util.inspect("realmModel", realmModel));
+                logger.info("linking user authSession " + Util.inspect("authSession", authSession));
                 UserModel linkingUser = AbstractIdpAuthenticator.getExistingUser(session, realmModel, authSession);
                 if (!linkingUser.getId().equals(federatedUser.getId())) {
                     return redirectToErrorPage(authSession, Response.Status.BAD_REQUEST, "identityProviderDifferentUserMessage", federatedUser.getUsername(), linkingUser.getUsername());

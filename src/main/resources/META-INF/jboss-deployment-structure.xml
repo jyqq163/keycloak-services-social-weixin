@@ -13,6 +13,7 @@
             <module name="org.keycloak.keycloak-model-jpa"/>
             <module name="org.keycloak.keycloak-model-infinispan"/>
             <module name="org.keycloak.keycloak-services"/>
+            <module name="com.google.code.gson"/>
         </dependencies>
     </deployment>
 </jboss-deployment-structure>

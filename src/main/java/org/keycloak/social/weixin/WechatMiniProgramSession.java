@@ -152,6 +152,11 @@ public class WechatMiniProgramSession implements AuthenticationSessionModel {
             return null;
         }
 
+        if(s.equals(AbstractIdpAuthenticator.BROKERED_CONTEXT_NOTE)){
+            System.out.println("AbstractIdpAuthenticator.BROKERED_CONTEXT_NOTE = null");
+            return null;
+        }
+
         System.out.println("Getting auth note with s = " + s + ", and I returned false for it");
         return "false";
     }
