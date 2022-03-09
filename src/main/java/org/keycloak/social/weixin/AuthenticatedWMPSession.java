@@ -8,12 +8,12 @@ import org.keycloak.sessions.RootAuthenticationSessionModel;
 import java.util.Map;
 import java.util.Set;
 
-public class WechatMiniProgramSession implements AuthenticationSessionModel {
+public class AuthenticatedWMPSession implements AuthenticationSessionModel {
     private final KeycloakSession session;
     private final RealmModel realmModel;
     private final UserModel authenticatedUser;
 
-    public WechatMiniProgramSession(KeycloakSession session, RealmModel realmModel, UserModel userModel) {
+    public AuthenticatedWMPSession(KeycloakSession session, RealmModel realmModel, UserModel userModel) {
         this.session = session;
         this.realmModel = realmModel;
         this.authenticatedUser = userModel;

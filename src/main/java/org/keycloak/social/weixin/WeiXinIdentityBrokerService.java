@@ -7,7 +7,6 @@ import org.keycloak.authentication.AuthenticationProcessor;
 import org.keycloak.authentication.authenticators.broker.AbstractIdpAuthenticator;
 import org.keycloak.authentication.authenticators.broker.util.PostBrokerLoginConstants;
 import org.keycloak.authentication.authenticators.broker.util.SerializedBrokeredIdentityContext;
-import org.keycloak.broker.oidc.mappers.AbstractJsonUserAttributeMapper;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.broker.provider.IdentityBrokerException;
 import org.keycloak.broker.provider.IdentityProvider;
@@ -436,7 +435,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
                 UserSessionModel userSession = authenticationSessionManager.getUserSession(authSession);
 
                 if(userSession == null){
-                    userSession = WMPHelper.getUserSessionModel(context, federatedUser, authSession, providerId, session);
+                    userSession = WMPHelper.getUserSessionModel(context, federatedUser, authSession);
                 }
 
                 logger.info(Util.inspect("authSessionManager", authenticationSessionManager));

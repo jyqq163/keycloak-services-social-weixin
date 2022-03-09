@@ -9,14 +9,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class WechatMiniProgramSessionTest {
 
-    Stream<String> getRequiredActionsStream(WechatMiniProgramSession session) {
+    Stream<String> getRequiredActionsStream(AuthenticatedWMPSession session) {
         Set<String> value = session.getRequiredActions();
         return value != null ? value.stream() : Stream.empty();
     }
 
     @Test
     void getRequiredActionsEmpty() {
-        var sut = new WechatMiniProgramSession(null, null, null);
+        var sut = new AuthenticatedWMPSession(null, null, null);
 
         var firstAction = getRequiredActionsStream(sut).findFirst();
         assertFalse(firstAction.isPresent());

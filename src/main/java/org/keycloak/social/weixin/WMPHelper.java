@@ -13,118 +13,8 @@ public class WMPHelper {
         return IdentityBrokerState.decoded("wmp", clientId, tabId).getEncoded();
     }
 
-    public static UserSessionModel getUserSessionModel(BrokeredIdentityContext context, UserModel federatedUser, AuthenticationSessionModel authSession, String providerId, KeycloakSession session){
-        return new UserSessionModel() {
-            @Override
-            public String getId() {
-                return context.getId();
-            }
-
-            @Override
-            public RealmModel getRealm() {
-                return authSession.getRealm();
-            }
-
-            @Override
-            public String getBrokerSessionId() {
-                return context.getBrokerSessionId();
-            }
-
-            @Override
-            public String getBrokerUserId() {
-                return context.getBrokerUserId();
-            }
-
-            @Override
-            public UserModel getUser() {
-                return federatedUser;
-            }
-
-            @Override
-            public String getLoginUsername() {
-                return context.getUsername();
-            }
-
-            @Override
-            public String getIpAddress() {
-                return "0.0.0.0";
-            }
-
-            @Override
-            public String getAuthMethod() {
-                return "WMP";
-            }
-
-            @Override
-            public boolean isRememberMe() {
-                return false;
-            }
-
-            @Override
-            public int getStarted() {
-                return 0;
-            }
-
-            @Override
-            public int getLastSessionRefresh() {
-                return 0;
-            }
-
-            @Override
-            public void setLastSessionRefresh(int i) {
-
-            }
-
-            @Override
-            public boolean isOffline() {
-                return false;
-            }
-
-            @Override
-            public Map<String, AuthenticatedClientSessionModel> getAuthenticatedClientSessions() {
-                return null;
-            }
-
-            @Override
-            public void removeAuthenticatedClientSessions(Collection<String> collection) {
-
-            }
-
-            @Override
-            public String getNote(String s) {
-                return s;
-            }
-
-            @Override
-            public void setNote(String s, String s1) {
-
-            }
-
-            @Override
-            public void removeNote(String s) {
-
-            }
-
-            @Override
-            public Map<String, String> getNotes() {
-                return null;
-            }
-
-            @Override
-            public State getState() {
-                return null;
-            }
-
-            @Override
-            public void setState(State state) {
-
-            }
-
-            @Override
-            public void restartSession(RealmModel realmModel, UserModel userModel, String s, String s1, String s2, boolean b, String s3, String s4) {
-
-            }
-        };
+    public static UserSessionModel getUserSessionModel(BrokeredIdentityContext context, UserModel federatedUser, AuthenticationSessionModel authSession){
+        return new WMPUserSessionModel(context, federatedUser, authSession);
     }
 
     static ClientSessionCode getClientSessionCode(WeiXinIdentityBrokerService weiXinIdentityBrokerService, RealmModel realmModel, KeycloakSession session, BrokeredIdentityContext context) {
@@ -319,7 +209,7 @@ public class WMPHelper {
 
             }
         };
-        final WechatMiniProgramSession wmpSession = new WechatMiniProgramSession(session, weiXinIdentityBrokerService.realmModel, userModel);
+        final AuthenticatedWMPSession wmpSession = new AuthenticatedWMPSession(session, weiXinIdentityBrokerService.realmModel, userModel);
 
         return new ClientSessionCode(session, realmModel, wmpSession);
     }
