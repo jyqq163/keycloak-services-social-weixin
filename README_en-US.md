@@ -1,6 +1,6 @@
 # keycloak-services-social-weixin
 
-[中文](README_zh-CN.md)
+[中文](README.md)
 
 > Wechat Login for Keycloak
 
