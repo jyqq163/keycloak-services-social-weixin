@@ -1,6 +1,6 @@
 # keycloak-services-social-weixin
 
-[中文](README_zh-CN.md)
+[English](README_en-US.md)
 
 > Wechat Login for Keycloak
 
@@ -22,20 +22,33 @@ To install the social weixin one has to:
   * `cp templates/realm-identity-provider-weixin.html _KEYCLOAK_HOME_/themes/base/admin/resources/partials`
   * `cp templates/realm-identity-provider-weixin-ext.html _KEYCLOAK_HOME_/themes/base/admin/resources/partials`
   
-## How to build
+## 本地开发
+
+设置 JAVA_HOME 到 11 的 jdk，然后
 
 ```shell script
 mvn install
 ```
 
-## Develop
+如果使用别的版本，会导致运行测试碰到一些问题，比如 https://github.com/mockito/mockito/issues/2568。
+
+## 跑测试
 
 ```shell script
 mvn clean test
 ```
 
-## Maven package
-支持最新的 keycloak，你可以使用我打的包：https://github.com/Jeff-Tian/keycloak-services-social-weixin/packages/225091
+## Maven 包
+
+- 支持 jboss/keycloak 16，你可以使用我打的包：https://github.com/Jeff-Tian/keycloak-services-social-weixin/packages/225091
+- 最新的代码支持 quay.io/keycloak 18.0.2 
+
+## 打包
+
+```shell
+mvn package
+ls target
+```
 
 ## 使用截图
 ![image](https://user-images.githubusercontent.com/3367820/82117152-fdfd0300-97a0-11ea-8e10-02c9d9838a0a.png)
@@ -53,6 +66,10 @@ docker pull jefftian/keycloak-heroku:latest
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://dashboard.heroku.com/new?button-url=https%3A%2F%2Fgithub.com%2FJeff-Tian%2Fkeycloak-heroku&template=https%3A%2F%2Fgithub.com%2FJeff-Tian%2Fkeycloak-heroku)
 
 ## Release Notes
+
+* 2022090
+
+1 适配 quay.io/keycloak 18.0.2
 
 * 20180730
 

@@ -29,11 +29,6 @@ import javax.ws.rs.core.Response;
 public class WeiXinIdentityProviderTest {
     WeiXinIdentityProvider weiXinIdentityProvider;
 
-    @BeforeClass
-    public static void beforeClass() {
-
-    }
-
     @Before
     public void before() {
         UUID uuid = PowerMockito.mock(UUID.class);
@@ -45,16 +40,6 @@ public class WeiXinIdentityProviderTest {
         OAuth2IdentityProviderConfig config = new OAuth2IdentityProviderConfig();
         config.setClientId("clientId");
         weiXinIdentityProvider = new WeiXinIdentityProvider(null, config);
-    }
-
-    @AfterClass
-    public static void afterClass() {
-
-    }
-
-    @After
-    public void after() {
-
     }
 
     @Test
