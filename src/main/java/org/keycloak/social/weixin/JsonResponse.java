@@ -1,6 +1,5 @@
 package org.keycloak.social.weixin;
 
-import org.apache.http.HttpResponse;
 import javax.ws.rs.core.Response;
 
 public class JsonResponse {

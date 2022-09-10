@@ -434,7 +434,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
                 final AuthenticationSessionManager authenticationSessionManager = new AuthenticationSessionManager(session);
                 UserSessionModel userSession = authenticationSessionManager.getUserSession(authSession);
 
-                if(userSession == null){
+                if (userSession == null) {
                     userSession = WMPHelper.getUserSessionModel(context, federatedUser, authSession);
                 }
 
