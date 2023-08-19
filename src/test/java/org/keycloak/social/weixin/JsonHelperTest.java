@@ -7,10 +7,10 @@ import org.keycloak.models.*;
 import org.keycloak.sessions.AuthenticationSessionModel;
 import org.keycloak.sessions.RootAuthenticationSessionModel;
 
-import javax.json.Json;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 class JsonHelperTest {
 
@@ -73,7 +73,7 @@ class JsonHelperTest {
             }
 
             @Override
-            public List<String> getAttribute(String s) {
+            public Stream<String> getAttributeStream(String s) {
                 return null;
             }
 
@@ -83,7 +83,7 @@ class JsonHelperTest {
             }
 
             @Override
-            public Set<String> getRequiredActions() {
+            public Stream<String> getRequiredActionsStream() {
                 return null;
             }
 
@@ -138,7 +138,7 @@ class JsonHelperTest {
             }
 
             @Override
-            public Set<GroupModel> getGroups() {
+            public Stream<GroupModel> getGroupsStream() {
                 return null;
             }
 
@@ -178,12 +178,17 @@ class JsonHelperTest {
             }
 
             @Override
-            public Set<RoleModel> getRealmRoleMappings() {
+            public SubjectCredentialManager credentialManager() {
                 return null;
             }
 
             @Override
-            public Set<RoleModel> getClientRoleMappings(ClientModel clientModel) {
+            public Stream<RoleModel> getRealmRoleMappingsStream() {
+                return null;
+            }
+
+            @Override
+            public Stream<RoleModel> getClientRoleMappingsStream(ClientModel clientModel) {
                 return null;
             }
 
@@ -198,7 +203,7 @@ class JsonHelperTest {
             }
 
             @Override
-            public Set<RoleModel> getRoleMappings() {
+            public Stream<RoleModel> getRoleMappingsStream() {
                 return null;
             }
 

@@ -1,7 +1,6 @@
 package org.keycloak.social.weixin;
 
 import org.jboss.logging.Logger;
-import org.jboss.resteasy.spi.HttpRequest;
 import org.keycloak.OAuthErrorException;
 import org.keycloak.authentication.AuthenticationProcessor;
 import org.keycloak.authentication.authenticators.broker.AbstractIdpAuthenticator;
@@ -48,6 +47,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.CancellationException;
+import java.util.stream.Stream;
 
 public class WeiXinIdentityBrokerService implements IdentityProvider.AuthenticationCallback {
     public final RealmModel realmModel;
@@ -58,7 +58,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
     private KeycloakSession session;
 
     @Context
-    private HttpRequest request;
+    private org.keycloak.http.HttpRequest request;
 
     @Context
     private ClientConnection clientConnection;
@@ -69,7 +69,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
     @Context
     private HttpHeaders headers;
 
-    public void init(KeycloakSession session, ClientConnection clientConnection, HttpHeaders headers, EventBuilder event, HttpRequest request) {
+    public void init(KeycloakSession session, ClientConnection clientConnection, HttpHeaders headers, EventBuilder event, org.keycloak.http.HttpRequest request) {
         if (session != null) {
             this.session = session;
         }
@@ -192,7 +192,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
             return ParsedCodeContext.clientSessionCode(WMPHelper.getClientSessionCode(this, realmModel, session, context));
         }
 
-        SessionCodeChecks checks = new SessionCodeChecks(realmModel, session.getContext().getUri(), request, clientConnection, session, event, null, code, null, clientId, tabId, LoginActionsService.AUTHENTICATE_PATH);
+        SessionCodeChecks checks = new SessionCodeChecks(realmModel, session.getContext().getUri(), (org.keycloak.http.HttpRequest) request, clientConnection, session, event, null, code, null, clientId, tabId, LoginActionsService.AUTHENTICATE_PATH);
 
         logger.info(Util.inspect("checks = ", checks));
 
@@ -215,7 +215,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
                     Response errorResponse = checks.getResponse();
 
                     // Remove "code" from browser history
-                    errorResponse = BrowserHistoryHelper.getInstance().saveResponseAndRedirect(session, authSession, errorResponse, true, request);
+                    errorResponse = BrowserHistoryHelper.getInstance().saveResponseAndRedirect(session, authSession, errorResponse, true, (org.keycloak.http.HttpRequest) request);
                     return ParsedCodeContext.response(errorResponse);
                 }
             } else {
@@ -229,7 +229,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
     }
 
     private ParsedCodeContext parseEncodedSessionCode(String encodedCode, BrokeredIdentityContext context) {
-        IdentityBrokerState state = IdentityBrokerState.encoded(encodedCode);
+        IdentityBrokerState state = IdentityBrokerState.encoded(encodedCode, realmModel);
         String code = state.getDecodedState();
         String clientId = state.getClientId();
         String tabId = state.getTabId();
@@ -303,7 +303,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
 
         if (federatedUser != null) {
             if (context.getIdpConfig().isStoreToken()) {
-                FederatedIdentityModel oldModel = this.session.users().getFederatedIdentity(federatedUser, context.getIdpConfig().getAlias(), this.realmModel);
+                FederatedIdentityModel oldModel = this.session.users().getFederatedIdentity(this.realmModel, federatedUser, context.getIdpConfig().getAlias());
                 if (!ObjectUtil.isEqualOrBothNull(context.getToken(), oldModel.getToken())) {
                     this.session.users().updateFederatedIdentity(this.realmModel, federatedUser, newModel);
                     logger.debugf("Identity [%s] update with response from identity provider [%s].", federatedUser, context.getIdpConfig().getAlias());
@@ -362,18 +362,18 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
     }
 
     private void updateFederatedIdentity(BrokeredIdentityContext context, UserModel federatedUser) {
-        FederatedIdentityModel federatedIdentityModel = this.session.users().getFederatedIdentity(federatedUser, context.getIdpConfig().getAlias(), this.realmModel);
+        FederatedIdentityModel federatedIdentityModel = this.session.users().getFederatedIdentity(this.realmModel, federatedUser, context.getIdpConfig().getAlias());
 
         // Skip DB write if tokens are null or equal
         updateToken(context, federatedUser, federatedIdentityModel);
         context.getIdp().updateBrokeredUser(session, realmModel, federatedUser, context);
-        Set<IdentityProviderMapperModel> mappers = realmModel.getIdentityProviderMappersByAlias(context.getIdpConfig().getAlias());
+        Stream<IdentityProviderMapperModel> mappers = realmModel.getIdentityProviderMappersByAliasStream(context.getIdpConfig().getAlias());
         if (mappers != null) {
             KeycloakSessionFactory sessionFactory = session.getKeycloakSessionFactory();
-            for (IdentityProviderMapperModel mapper : mappers) {
+            mappers.forEachOrdered(mapper -> {
                 IdentityProviderMapper target = (IdentityProviderMapper) sessionFactory.getProviderFactory(IdentityProviderMapper.class, mapper.getIdentityProviderMapper());
                 target.updateBrokeredUser(session, realmModel, federatedUser, mapper, context);
-            }
+            });
         }
 
     }
@@ -450,7 +450,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
                 return JsonResponse.fromJson(JsonHelper.stringify(userSession));
             }
 
-            return AuthenticationManager.finishedRequiredActions(session, authSession, null, clientConnection, request, session.getContext().getUri(), event);
+            return AuthenticationManager.finishedRequiredActions(session, authSession, null, clientConnection, (org.keycloak.http.HttpRequest) request, session.getContext().getUri(), event);
         }
     }
 
@@ -508,13 +508,13 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
                 logger.debugf("Registered new user '%s' after first login with identity provider '%s'. Identity provider username is '%s' . ", federatedUser.getUsername(), providerId, context.getUsername());
 
                 context.getIdp().importNewUser(session, realmModel, federatedUser, context);
-                Set<IdentityProviderMapperModel> mappers = realmModel.getIdentityProviderMappersByAlias(providerId);
+                Stream<IdentityProviderMapperModel> mappers = realmModel.getIdentityProviderMappersByAliasStream(providerId);
                 if (mappers != null) {
                     KeycloakSessionFactory sessionFactory = session.getKeycloakSessionFactory();
-                    for (IdentityProviderMapperModel mapper : mappers) {
+                    mappers.forEachOrdered(mapper -> {
                         IdentityProviderMapper target = (IdentityProviderMapper) sessionFactory.getProviderFactory(IdentityProviderMapper.class, mapper.getIdentityProviderMapper());
                         target.importNewUser(session, realmModel, federatedUser, mapper, context);
-                    }
+                    });
                 }
 
                 if (context.getIdpConfig().isTrustEmail() && !Validation.isBlank(federatedUser.getEmail()) && !Boolean.parseBoolean(authSession.getAuthNote(AbstractIdpAuthenticator.UPDATE_PROFILE_EMAIL_CHANGED))) {
@@ -640,13 +640,17 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
         session.getContext().setClient(authenticationSession.getClient());
 
         context.getIdp().preprocessFederatedIdentity(session, realmModel, context);
-        Set<IdentityProviderMapperModel> mappers = realmModel.getIdentityProviderMappersByAlias(context.getIdpConfig().getAlias());
+        Stream<IdentityProviderMapperModel> mappers = realmModel.getIdentityProviderMappersByAliasStream(context.getIdpConfig().getAlias());
+
         if (mappers != null) {
             KeycloakSessionFactory sessionFactory = session.getKeycloakSessionFactory();
-            for (IdentityProviderMapperModel mapper : mappers) {
+
+            mappers.forEachOrdered(mapper -> {
+                logger.info("mapper = " + Util.inspect("mapper", mapper));
+
                 IdentityProviderMapper target = (IdentityProviderMapper) sessionFactory.getProviderFactory(IdentityProviderMapper.class, mapper.getIdentityProviderMapper());
                 target.preprocessFederatedIdentity(session, realmModel, mapper, context);
-            }
+            });
         }
 
         FederatedIdentityModel federatedIdentityModel = new FederatedIdentityModel(providerId, context.getId(),
@@ -678,7 +682,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
         }
 
         if (federatedUser == null) {
-            IdentityBrokerState theState = IdentityBrokerState.encoded(state.toString());
+            IdentityBrokerState theState = IdentityBrokerState.encoded(state.toString(), realmModel);
 
             if (theState.getDecodedState().equals("wmp")) {
                 logger.info("it's wmp, let's return directly. " + Util.inspect("theState", theState.getDecodedState()));
@@ -732,7 +736,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
     }
 
     @Override
-    public Response cancelled() {
+    public Response cancelled(IdentityProviderModel idpConfig) {
         throw new CancellationException("Cancelled!");
     }
 

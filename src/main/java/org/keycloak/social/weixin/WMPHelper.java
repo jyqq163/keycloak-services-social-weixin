@@ -7,13 +7,14 @@ import org.keycloak.services.managers.ClientSessionCode;
 import org.keycloak.sessions.AuthenticationSessionModel;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 public class WMPHelper {
     public static String createStateForWMP(String clientId, String tabId) {
-        return IdentityBrokerState.decoded("wmp", clientId, tabId).getEncoded();
+        return IdentityBrokerState.decoded("wmp", clientId, clientId, tabId).getEncoded();
     }
 
-    public static UserSessionModel getUserSessionModel(BrokeredIdentityContext context, UserModel federatedUser, AuthenticationSessionModel authSession){
+    public static UserSessionModel getUserSessionModel(BrokeredIdentityContext context, UserModel federatedUser, AuthenticationSessionModel authSession) {
         return new WMPUserSessionModel(context, federatedUser, authSession);
     }
 
@@ -75,17 +76,23 @@ public class WMPHelper {
             }
 
             @Override
-            public List<String> getAttribute(String s) {
+            public Stream<String> getAttributeStream(String s) {
+                List<String> attributeValues = this.getAttribute(s);
+
+                return attributeValues.stream();
+            }
+
+            private List<String> getAttribute(String s) {
                 return Collections.singletonList(context.getUserAttribute(s));
             }
 
             @Override
             public Map<String, List<String>> getAttributes() {
-                return null;
+                return context.getAttributes();
             }
 
             @Override
-            public Set<String> getRequiredActions() {
+            public Stream<String> getRequiredActionsStream() {
                 return null;
             }
 
@@ -140,7 +147,7 @@ public class WMPHelper {
             }
 
             @Override
-            public Set<GroupModel> getGroups() {
+            public Stream<GroupModel> getGroupsStream() {
                 return null;
             }
 
@@ -180,12 +187,17 @@ public class WMPHelper {
             }
 
             @Override
-            public Set<RoleModel> getRealmRoleMappings() {
+            public SubjectCredentialManager credentialManager() {
                 return null;
             }
 
             @Override
-            public Set<RoleModel> getClientRoleMappings(ClientModel clientModel) {
+            public Stream<RoleModel> getRealmRoleMappingsStream() {
+                return null;
+            }
+
+            @Override
+            public Stream<RoleModel> getClientRoleMappingsStream(ClientModel clientModel) {
                 return null;
             }
 
@@ -200,8 +212,8 @@ public class WMPHelper {
             }
 
             @Override
-            public Set<RoleModel> getRoleMappings() {
-                return null;
+            public Stream<RoleModel> getRoleMappingsStream() {
+                return Stream.<RoleModel>builder().build();
             }
 
             @Override

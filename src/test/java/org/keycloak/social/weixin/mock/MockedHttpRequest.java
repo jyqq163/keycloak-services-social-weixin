@@ -1,69 +1,15 @@
 package org.keycloak.social.weixin.mock;
 
-import org.jboss.resteasy.spi.HttpRequest;
-import org.jboss.resteasy.spi.ResteasyAsynchronousContext;
-import org.jboss.resteasy.spi.ResteasyUriInfo;
+import org.keycloak.http.FormPartValue;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
-import java.io.InputStream;
-import java.net.URI;
-import java.util.Enumeration;
+import javax.ws.rs.core.UriInfo;
+import java.security.cert.X509Certificate;
 
-public class MockedHttpRequest implements HttpRequest {
-    private MockedHttpHeaders httpHeaders;
-
-    public MockedHttpRequest() {
-        this.httpHeaders = new MockedHttpHeaders();
-    }
-
-    @Override
-    public HttpHeaders getHttpHeaders() {
-        return this.httpHeaders;
-    }
-
-    @Override
-    public MultivaluedMap<String, String> getMutableHeaders() {
-        return null;
-    }
-
-    @Override
-    public InputStream getInputStream() {
-        return null;
-    }
-
-    @Override
-    public void setInputStream(InputStream inputStream) {
-
-    }
-
-    @Override
-    public ResteasyUriInfo getUri() {
-        return null;
-    }
-
+public class MockedHttpRequest implements org.keycloak.http.HttpRequest {
     @Override
     public String getHttpMethod() {
-        return null;
-    }
-
-    @Override
-    public void setHttpMethod(String s) {
-
-    }
-
-    @Override
-    public void setRequestUri(URI uri) throws IllegalStateException {
-
-    }
-
-    @Override
-    public void setRequestUri(URI uri, URI uri1) throws IllegalStateException {
-
-    }
-
-    @Override
-    public MultivaluedMap<String, String> getFormParameters() {
         return null;
     }
 
@@ -73,42 +19,24 @@ public class MockedHttpRequest implements HttpRequest {
     }
 
     @Override
-    public Object getAttribute(String s) {
+    public MultivaluedMap<String, FormPartValue> getMultiPartFormParameters() {
         return null;
     }
 
     @Override
-    public void setAttribute(String s, Object o) {
+    public HttpHeaders getHttpHeaders() {
+        MockedHttpHeaders headers =  new MockedHttpHeaders();
 
+        return headers;
     }
 
     @Override
-    public void removeAttribute(String s) {
-
+    public X509Certificate[] getClientCertificateChain() {
+        return new X509Certificate[0];
     }
 
     @Override
-    public Enumeration<String> getAttributeNames() {
+    public UriInfo getUri() {
         return null;
-    }
-
-    @Override
-    public ResteasyAsynchronousContext getAsyncContext() {
-        return null;
-    }
-
-    @Override
-    public boolean isInitial() {
-        return false;
-    }
-
-    @Override
-    public void forward(String s) {
-
-    }
-
-    @Override
-    public boolean wasForwarded() {
-        return false;
     }
 }

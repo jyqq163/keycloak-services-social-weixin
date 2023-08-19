@@ -6,7 +6,6 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import org.keycloak.models.UserModel;
 
-import javax.json.Json;
 import java.lang.reflect.Type;
 import java.util.Objects;
 

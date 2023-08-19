@@ -2,7 +2,6 @@ package org.keycloak.social.weixin;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
@@ -17,6 +16,7 @@ import org.keycloak.social.weixin.mock.MockedHttpRequest;
 import java.util.Map;
 import java.util.UUID;
 
+import org.keycloak.social.weixin.mock.MockedKeycloakSession;
 import org.powermock.api.mockito.PowerMockito;
 import org.mockito.Mockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -56,11 +56,11 @@ public class WeiXinIdentityProviderTest {
 
     @Test
     public void pcGoesToQRConnect() {
-        IdentityBrokerState state = IdentityBrokerState.decoded("state", "clientId", "tabId");
+        IdentityBrokerState state = IdentityBrokerState.decoded("state", "clientId", "clientId", "tabId");
         var authSession = new MockedAuthenticationSessionModel();
 
-        HttpRequest httpRequest = new MockedHttpRequest();
-        AuthenticationRequest request = new AuthenticationRequest(null, null, authSession, httpRequest, null, state, "https" +
+        org.keycloak.http.HttpRequest httpRequest = new MockedHttpRequest();
+        AuthenticationRequest request = new AuthenticationRequest(new MockedKeycloakSession(httpRequest), null, authSession, httpRequest, null, state, "https" +
                 "://redirect.to.customized/url");
 
         var res = weiXinIdentityProvider.performLogin(request);
@@ -83,11 +83,11 @@ public class WeiXinIdentityProviderTest {
 
         weiXinIdentityProvider = new WeiXinIdentityProvider(null, config);
 
-        IdentityBrokerState state = IdentityBrokerState.decoded("state", "clientId", "tabId");
+        IdentityBrokerState state = IdentityBrokerState.decoded("state", "clientId", "clientId", "tabId");
         var authSession = new MockedAuthenticationSessionModel();
 
-        HttpRequest httpRequest = new MockedHttpRequest();
-        AuthenticationRequest request = new AuthenticationRequest(null, null, authSession, httpRequest, null, state,
+        org.keycloak.http.HttpRequest httpRequest = new MockedHttpRequest();
+        AuthenticationRequest request = new AuthenticationRequest(new MockedKeycloakSession(httpRequest), null, authSession, httpRequest, null, state,
                 "https" +
                         "://redirect.to.customized/url");
 

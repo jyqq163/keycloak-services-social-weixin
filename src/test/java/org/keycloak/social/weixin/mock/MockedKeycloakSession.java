@@ -1,21 +1,115 @@
 package org.keycloak.social.weixin.mock;
 
+import org.keycloak.common.ClientConnection;
 import org.keycloak.component.ComponentModel;
+import org.keycloak.http.HttpRequest;
+import org.keycloak.http.HttpResponse;
 import org.keycloak.models.*;
-import org.keycloak.models.cache.UserCache;
+import org.keycloak.provider.InvalidationHandler;
 import org.keycloak.provider.Provider;
 import org.keycloak.services.clientpolicy.ClientPolicyManager;
+import org.keycloak.sessions.AuthenticationSessionModel;
 import org.keycloak.sessions.AuthenticationSessionProvider;
-import org.keycloak.storage.federated.UserFederatedStorageProvider;
+import org.keycloak.urls.UrlType;
 import org.keycloak.vault.VaultTranscriber;
 
+import javax.ws.rs.core.HttpHeaders;
+import java.net.URI;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
 public class MockedKeycloakSession implements KeycloakSession {
+    private final HttpRequest httpRequest;
+
+    public MockedKeycloakSession(HttpRequest httpRequest) {
+        this.httpRequest = httpRequest;
+    }
+
     @Override
     public KeycloakContext getContext() {
-        return null;
+        return new KeycloakContext() {
+            @Override
+            public URI getAuthServerUrl() {
+                return null;
+            }
+
+            @Override
+            public String getContextPath() {
+                return null;
+            }
+
+            @Override
+            public KeycloakUriInfo getUri() {
+                return null;
+            }
+
+            @Override
+            public KeycloakUriInfo getUri(UrlType urlType) {
+                return null;
+            }
+
+            @Override
+            public HttpHeaders getRequestHeaders() {
+                return httpRequest.getHttpHeaders();
+            }
+
+            @Override
+            public <T> T getContextObject(Class<T> aClass) {
+                return null;
+            }
+
+            @Override
+            public RealmModel getRealm() {
+                return null;
+            }
+
+            @Override
+            public void setRealm(RealmModel realmModel) {
+
+            }
+
+            @Override
+            public ClientModel getClient() {
+                return null;
+            }
+
+            @Override
+            public void setClient(ClientModel clientModel) {
+
+            }
+
+            @Override
+            public ClientConnection getConnection() {
+                return null;
+            }
+
+            @Override
+            public Locale resolveLocale(UserModel userModel) {
+                return null;
+            }
+
+            @Override
+            public AuthenticationSessionModel getAuthenticationSession() {
+                return null;
+            }
+
+            @Override
+            public void setAuthenticationSession(AuthenticationSessionModel authenticationSessionModel) {
+
+            }
+
+            @Override
+            public HttpRequest getHttpRequest() {
+                return null;
+            }
+
+            @Override
+            public HttpResponse getHttpResponse() {
+                return null;
+            }
+        };
     }
 
     @Override
@@ -84,7 +178,12 @@ public class MockedKeycloakSession implements KeycloakSession {
     }
 
     @Override
-    public void invalidate(InvalidableObjectType invalidableObjectType, Object... objects) {
+    public Map<String, Object> getAttributes() {
+        return null;
+    }
+
+    @Override
+    public void invalidate(InvalidationHandler.InvalidableObjectType invalidableObjectType, Object... objects) {
 
     }
 
@@ -144,7 +243,7 @@ public class MockedKeycloakSession implements KeycloakSession {
     }
 
     @Override
-    public UserCache userCache() {
+    public UserProvider userCache() {
         return null;
     }
 
@@ -210,11 +309,6 @@ public class MockedKeycloakSession implements KeycloakSession {
 
     @Override
     public RoleProvider roleLocalStorage() {
-        return null;
-    }
-
-    @Override
-    public UserFederatedStorageProvider userFederatedStorage() {
         return null;
     }
 

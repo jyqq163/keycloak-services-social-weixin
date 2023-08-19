@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.models.KeycloakSession;
+import org.keycloak.social.weixin.mock.MockedHttpRequest;
 import org.keycloak.social.weixin.mock.MockedKeycloakSession;
 
 import java.util.Map;
@@ -44,9 +45,11 @@ public class UtilTest {
 
     @Test
     public void inspectKeycloakSession() {
-        var session = new MockedKeycloakSession();
+        MockedHttpRequest httpRequest = new MockedHttpRequest();
+        var session = new MockedKeycloakSession(httpRequest);
         var inspected = Util.inspect("session", session);
         Assert.assertEquals("session >>>\n" +
+                "\thttpRequest: " + httpRequest + "\n" +
                 "session <<<\n", inspected);
     }
 }

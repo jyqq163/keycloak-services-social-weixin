@@ -31,7 +31,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import org.jboss.resteasy.spi.HttpRequest;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.broker.oidc.AbstractOAuth2IdentityProvider;
 import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
@@ -157,7 +156,8 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
     public Response performLogin(AuthenticationRequest request) {
         try {
             URI authorizationUrl = createAuthorizationUrl(request).build();
-            String ua = request.getHttpRequest().getHttpHeaders().getHeaderString("user-agent").toLowerCase();
+            String ua = request.getSession().getContext().getRequestHeaders().getHeaderString("user-agent").toLowerCase();
+            
             if (isWechatBrowser(ua)) {
                 return Response.seeOther(URI.create(authorizationUrl.toString() + "#wechat_redirect")).build();
             }
@@ -181,9 +181,9 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
      */
     private boolean isWechatBrowser(String ua) {
         String wechatAppId = getConfig().getConfig().get(WECHAT_APPID_KEY);
-        String wechantSecret = getConfig().getConfig().get(WECHATAPPIDKEY);
-        return ua.indexOf(WECHATFLAG) > 0 && wechatAppId != null && wechantSecret != null
-                && wechatAppId.length() > 0 && wechantSecret.length() > 0;
+        String wechatAppSecret = getConfig().getConfig().get(WECHATAPPIDKEY);
+        return ua.indexOf(WECHATFLAG) > 0 && wechatAppId != null && wechatAppSecret != null
+                && !wechatAppId.isEmpty() && !wechatAppSecret.isEmpty();
     }
 
 
@@ -191,7 +191,8 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
     protected UriBuilder createAuthorizationUrl(AuthenticationRequest request) {
 
         final UriBuilder uriBuilder;
-        String ua = request.getHttpRequest().getHttpHeaders().getHeaderString("user-agent").toLowerCase();
+        String ua = request.getSession().getContext().getRequestHeaders().getHeaderString("user-agent").toLowerCase();
+
         if (isWechatBrowser(ua)) {// 是微信浏览器
             logger.info("----------wechat");
             uriBuilder = UriBuilder.fromUri(WECHAT_AUTH_URL);
@@ -276,7 +277,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         protected UriInfo uriInfo;
 
         @Context
-        protected HttpRequest request;
+        protected org.keycloak.http.HttpRequest request;
 
         public Endpoint(AuthenticationCallback callback, RealmModel realm, EventBuilder event) {
             this.callback = callback;
@@ -298,7 +299,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
             if (error != null) {
                 if (error.equals(ACCESS_DENIED)) {
                     logger.error(ACCESS_DENIED + " for broker login " + getConfig().getProviderId() + " " + state);
-                    return callback.cancelled();
+                    return callback.cancelled(getConfig());
                 } else {
                     logger.error(error + " for broker login " + getConfig().getProviderId());
                     return callback.error(state + " " + Messages.IDENTITY_PROVIDER_UNEXPECTED_ERROR);
