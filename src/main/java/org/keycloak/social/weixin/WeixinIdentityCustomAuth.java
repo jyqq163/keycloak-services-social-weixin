@@ -22,11 +22,13 @@ public class WeixinIdentityCustomAuth extends AbstractOAuth2IdentityProvider<OAu
 
     // TODO: cache mechanism
     public String getAccessToken() throws IOException {
+        System.out.printf("getAccessToken by %s%n%s%n", this.getConfig().getClientId(), this.getConfig().getClientSecret());
         var res =
                 SimpleHttp.doGet(String.format("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential" +
                                 "&appid=%s&secret=%s", this.getConfig().getClientId(), this.getConfig().getClientSecret()),
                         this.session).asString();
 
+        System.out.printf("res is %s%n", res);
         var accessToken = this.extractTokenFromResponse(res, "access_token");
 //        var expiresIn = this.extractTokenFromResponse(res, "expires_in");
 

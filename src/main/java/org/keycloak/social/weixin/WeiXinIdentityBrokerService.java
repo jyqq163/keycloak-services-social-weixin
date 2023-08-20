@@ -86,10 +86,6 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
             this.request = request;
         }
 
-        logger.info("initializing ... realModel = " + Util.inspect("realmModel", realmModel));
-        Util.inspect("session", this.session);
-        Util.inspect("clientConnection", this.clientConnection);
-
         this.event = Objects.requireNonNullElseGet(event, () -> new EventBuilder(this.realmModel, this.session, this.clientConnection)).event(EventType.IDENTITY_PROVIDER_LOGIN);
     }
 
@@ -186,23 +182,17 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
             return ParsedCodeContext.response(staleCodeError);
         }
 
-        logger.info("check with session = " + Util.inspect("session", session));
-
         if (code.equals("wmp")) {
             return ParsedCodeContext.clientSessionCode(WMPHelper.getClientSessionCode(this, realmModel, session, context));
         }
 
         SessionCodeChecks checks = new SessionCodeChecks(realmModel, session.getContext().getUri(), (org.keycloak.http.HttpRequest) request, clientConnection, session, event, null, code, null, clientId, tabId, LoginActionsService.AUTHENTICATE_PATH);
 
-        logger.info(Util.inspect("checks = ", checks));
-
         checks.initialVerify();
         if (!checks.verifyActiveAndValidAction(AuthenticationSessionModel.Action.AUTHENTICATE.name(), ClientSessionCode.ActionType.LOGIN)) {
             AuthenticationSessionModel authSession = checks.getAuthenticationSession();
 
             if (authSession != null) {
-                logger.info(Util.inspect("authSession = ", authSession));
-
                 if (code.equals("wmp")) {
                     return ParsedCodeContext.response(checks.getResponse());
                 }
@@ -236,17 +226,11 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
 
         logger.info("decoded session code = " + code + ", clientid = " + clientId + ", tabId = " + tabId);
 
-        var res = parseSessionCode(code, clientId, tabId, context);
-        logger.info("context = " + Util.inspect("context = ", res));
-
-        return res;
+        return parseSessionCode(code, clientId, tabId, context);
     }
 
     private boolean shouldPerformAccountLinking(AuthenticationSessionModel authSession, UserSessionModel userSession, String providerId) {
-        logger.info("checking should performAccountLinking with userSession = " + Util.inspect("userSession", userSession));
         String noteFromSession = authSession.getAuthNote(LINKING_IDENTITY_PROVIDER);
-
-        logger.info("notefromsession = " + Util.inspect("notefromsession", noteFromSession));
 
         if (noteFromSession == null) {
             return false;
@@ -424,11 +408,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
 
             var contextData = context.getContextData();
             var state = contextData.get("state");
-            logger.info("login success state =  " + Util.inspect("state = ", state.toString()));
-
             logger.info("Login success!");
-            logger.info(Util.inspect("session", session));
-            logger.info(Util.inspect("request", request));
 
             if (state.toString().startsWith("wmp")) {
                 final AuthenticationSessionManager authenticationSessionManager = new AuthenticationSessionManager(session);
@@ -437,13 +417,6 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
                 if (userSession == null) {
                     userSession = WMPHelper.getUserSessionModel(context, federatedUser, authSession);
                 }
-
-                logger.info(Util.inspect("authSessionManager", authenticationSessionManager));
-                logger.info(Util.inspect("userSession", userSession));
-                logger.info(Util.inspect("user = ", userSession.getUser()));
-                logger.info(Util.inspect("session context", session.getContext()));
-                logger.info(Util.inspect("uri = ", session.getContext().getUri()));
-                logger.info(Util.inspect("connection = ", this.clientConnection));
 
                 AuthenticationManager.createLoginCookie(this.session, realmModel, userSession.getUser(), userSession, session.getContext().getUri(), this.clientConnection);
 
@@ -555,9 +528,6 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
             if (firstBrokerLoginInProgress) {
                 logger.debugf("Reauthenticated with broker '%s' when linking user '%s' with other broker", context.getIdpConfig().getAlias(), federatedUser.getUsername());
 
-                logger.info("linking user is " + Util.inspect("session", session));
-                logger.info("linking user ream" + Util.inspect("realmModel", realmModel));
-                logger.info("linking user authSession " + Util.inspect("authSession", authSession));
                 UserModel linkingUser = AbstractIdpAuthenticator.getExistingUser(session, realmModel, authSession);
                 if (!linkingUser.getId().equals(federatedUser.getId())) {
                     return redirectToErrorPage(authSession, Response.Status.BAD_REQUEST, "identityProviderDifferentUserMessage", federatedUser.getUsername(), linkingUser.getUsername());
@@ -606,14 +576,10 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
 
     @Override
     public Response authenticated(BrokeredIdentityContext context) {
-        logger.info("BrokeredIdentityContext = " + Util.inspect("BrokeredIdentityContext", context));
         IdentityProviderModel identityProviderConfig = context.getIdpConfig();
-        logger.info(Util.inspect("identityProviderConfig = ", identityProviderConfig));
 
         final Object state = context.getContextData().get("state");
         final ParsedCodeContext parsedCode = parseEncodedSessionCode(state.toString(), context);
-
-        logger.info(Util.inspect("parsedCode", parsedCode));
 
         if (parsedCode.response != null) {
             logger.info("response = " + parsedCode.response);
@@ -622,11 +588,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
         }
         ClientSessionCode<AuthenticationSessionModel> clientCode = parsedCode.clientSessionCode;
 
-        logger.info("client code = " + Util.inspect("client code = ", clientCode));
-
         String providerId = identityProviderConfig.getAlias();
-
-        logger.info(Util.inspect("identityProviderConfig = ", identityProviderConfig));
 
         if (!identityProviderConfig.isStoreToken()) {
             logger.debugf("Token will not be stored for identity provider [%s].", providerId);
@@ -634,7 +596,6 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
         }
 
         AuthenticationSessionModel authenticationSession = clientCode.getClientSession();
-        logger.info(Util.inspect("authentication session = ", authenticationSession));
         context.setAuthenticationSession(authenticationSession);
 
         session.getContext().setClient(authenticationSession.getClient());
@@ -646,8 +607,6 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
             KeycloakSessionFactory sessionFactory = session.getKeycloakSessionFactory();
 
             mappers.forEachOrdered(mapper -> {
-                logger.info("mapper = " + Util.inspect("mapper", mapper));
-
                 IdentityProviderMapper target = (IdentityProviderMapper) sessionFactory.getProviderFactory(IdentityProviderMapper.class, mapper.getIdentityProviderMapper());
                 target.preprocessFederatedIdentity(session, realmModel, mapper, context);
             });
@@ -655,26 +614,20 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
 
         FederatedIdentityModel federatedIdentityModel = new FederatedIdentityModel(providerId, context.getId(),
                 context.getUsername(), context.getToken());
-        logger.info(Util.inspect("model = ", federatedIdentityModel));
 
         this.event.event(EventType.IDENTITY_PROVIDER_LOGIN)
                 .detail(Details.REDIRECT_URI, authenticationSession.getRedirectUri())
                 .detail(Details.IDENTITY_PROVIDER, providerId)
                 .detail(Details.IDENTITY_PROVIDER_USERNAME, context.getUsername());
 
-        logger.info(Util.inspect("realmModel = ", realmModel));
         final UserProvider users = this.session.users();
-        logger.info(Util.inspect("Users = ", users));
 
         // Check if federatedUser is already authenticated (this means linking social into existing federatedUser account)
         final AuthenticationSessionManager authenticationSessionManager = new AuthenticationSessionManager(session);
-        logger.info(Util.inspect("authSessionManager = ", authenticationSessionManager));
 
         UserSessionModel userSession = authenticationSessionManager.getUserSession(authenticationSession);
-        logger.info("user session = " + Util.inspect("userSession = ", userSession));
 
         UserModel federatedUser = users.getUserByFederatedIdentity(this.realmModel, federatedIdentityModel);
-        logger.info("Federated = " + Util.inspect("federated = ", federatedUser));
 
         if (shouldPerformAccountLinking(authenticationSession, userSession, providerId)) {
             logger.info("linking");
@@ -685,7 +638,6 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
             IdentityBrokerState theState = IdentityBrokerState.encoded(state.toString(), realmModel);
 
             if (theState.getDecodedState().equals("wmp")) {
-                logger.info("it's wmp, let's return directly. " + Util.inspect("theState", theState.getDecodedState()));
                 return finishOrRedirectToPostBrokerLogin(authenticationSession, context, false, parsedCode.clientSessionCode);
             }
 

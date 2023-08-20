@@ -18,6 +18,7 @@ package org.keycloak.social.weixin;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -47,6 +48,7 @@ import org.keycloak.events.EventType;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.protocol.oidc.OIDCLoginProtocol;
+import org.keycloak.provider.ProviderConfigProperty;
 import org.keycloak.services.ErrorPage;
 import org.keycloak.services.messages.Messages;
 
@@ -157,7 +159,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         try {
             URI authorizationUrl = createAuthorizationUrl(request).build();
             String ua = request.getSession().getContext().getRequestHeaders().getHeaderString("user-agent").toLowerCase();
-            
+
             if (isWechatBrowser(ua)) {
                 return Response.seeOther(URI.create(authorizationUrl.toString() + "#wechat_redirect")).build();
             }
@@ -265,9 +267,6 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         protected EventBuilder event;
 
         @Context
-        protected KeycloakSession session;
-
-        @Context
         protected ClientConnection clientConnection;
 
         @Context
@@ -315,8 +314,6 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
                     setFederatedIdentity(state, federatedIdentity, customAuth.accessToken);
 
-                    logger.info(Util.inspect("federatedIdentity from openid", federatedIdentity));
-
                     return authenticated(federatedIdentity);
                 }
 
@@ -331,8 +328,6 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                     var accessTokenResponse = responses[1] != null ? responses[1].asString() : "";
                     logger.info("response from auth code = " + response + ", " + accessTokenResponse);
                     federatedIdentity = getFederatedIdentity(response, wechatLoginType, accessTokenResponse);
-
-                    logger.info(Util.inspect("federatedIdentity from auth code", federatedIdentity));
 
                     setFederatedIdentity(Objects.requireNonNullElse(state, WMPHelper.createStateForWMP(clientId, tabId)), federatedIdentity, response);
 
@@ -365,16 +360,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
             federatedIdentity.setIdpConfig(getConfig());
             federatedIdentity.setIdp(WeiXinIdentityProvider.this);
-//            federatedIdentity.setCode(state);
             federatedIdentity.setContextData(Map.of("state", Objects.requireNonNullElse(state, "wmp")));
-        }
-
-        public SimpleHttp generateTokenRequest(String authorizationCode) {
-            return SimpleHttp.doPost(getConfig().getTokenUrl(), session).param(OAUTH2_PARAMETER_CODE, authorizationCode)
-                    .param(OAUTH2_PARAMETER_CLIENT_ID, getConfig().getClientId())
-                    .param(OAUTH2_PARAMETER_CLIENT_SECRET, getConfig().getClientSecret())
-                    .param(OAUTH2_PARAMETER_REDIRECT_URI, uriInfo.getAbsolutePath().toString())
-                    .param(OAUTH2_PARAMETER_GRANT_TYPE, OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE);
         }
 
         public SimpleHttp[] generateTokenRequest(String authorizationCode, WechatLoginType wechatLoginType) {

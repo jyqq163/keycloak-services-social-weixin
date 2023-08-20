@@ -70,8 +70,6 @@ public class AuthenticatedWMPSession implements AuthenticationSessionModel {
         System.out.println("getParentSession = null, creating...");
         var root = this.session.authenticationSessions().createRootAuthenticationSession(this.realmModel);
 
-        System.out.println(Util.inspect("root = ", root));
-
         return root;
     }
 
