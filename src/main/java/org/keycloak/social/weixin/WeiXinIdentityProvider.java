@@ -66,7 +66,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
     public static final String OAUTH2_PARAMETER_CLIENT_SECRET = "secret";
 
     public static final String WECHAT_APPID_KEY = "clientId2";
-    public static final String WECHATAPPIDKEY = "clientSecret2";
+    public static final String WECHAT_APPID_SECRET = "clientSecret2";
 
     public static final String WMP_APP_ID = "wmpClientId";
     public static final String WMP_APP_SECRET = "wmpClientSecret";
@@ -177,7 +177,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
      */
     private boolean isWechatBrowser(String ua) {
         String wechatAppId = getConfig().getConfig().get(WECHAT_APPID_KEY);
-        String wechatAppSecret = getConfig().getConfig().get(WECHATAPPIDKEY);
+        String wechatAppSecret = getConfig().getConfig().get(WECHAT_APPID_SECRET);
         return ua.indexOf(WECHATFLAG) > 0 && wechatAppId != null && wechatAppSecret != null
                 && !wechatAppId.isEmpty() && !wechatAppSecret.isEmpty();
     }
@@ -362,7 +362,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                 return new SimpleHttp[]{SimpleHttp.doPost(WECHAT_TOKEN_URL, session)
                         .param(OAUTH2_PARAMETER_CODE, authorizationCode)
                         .param(OAUTH2_PARAMETER_CLIENT_ID, getConfig().getConfig().get(WECHAT_APPID_KEY))
-                        .param(OAUTH2_PARAMETER_CLIENT_SECRET, getConfig().getConfig().get(WECHATAPPIDKEY))
+                        .param(OAUTH2_PARAMETER_CLIENT_SECRET, getConfig().getConfig().get(WECHAT_APPID_SECRET))
                         .param(OAUTH2_PARAMETER_REDIRECT_URI, uriInfo.getAbsolutePath().toString())
                         .param(OAUTH2_PARAMETER_GRANT_TYPE, OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE), null};
             }
