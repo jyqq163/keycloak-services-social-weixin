@@ -1,12 +1,18 @@
 package org.keycloak.social.weixin;
 
+import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
 import org.keycloak.broker.provider.AbstractIdentityProviderFactory;
 import org.keycloak.models.IdentityProviderModel;
 import org.keycloak.broker.social.SocialIdentityProviderFactory;
 import org.keycloak.models.KeycloakSession;
+import org.keycloak.provider.ProviderConfigProperty;
+import org.keycloak.provider.ProviderConfigurationBuilder;
 
-public class WeiXinIdentityProviderFactory extends AbstractIdentityProviderFactory<WeiXinIdentityProvider>
-        implements SocialIdentityProviderFactory<WeiXinIdentityProvider> {
+import java.util.List;
+
+public class WeiXinIdentityProviderFactory extends
+        AbstractIdentityProviderFactory<WeiXinIdentityProvider> implements
+        SocialIdentityProviderFactory<WeiXinIdentityProvider> {
 
     public static final String PROVIDER_ID = "weixin";
 
@@ -17,12 +23,12 @@ public class WeiXinIdentityProviderFactory extends AbstractIdentityProviderFacto
 
     @Override
     public WeiXinIdentityProvider create(KeycloakSession session, IdentityProviderModel model) {
-        return new WeiXinIdentityProvider(session, new WeixinProviderConfig(model));
+        return new WeiXinIdentityProvider(session, new WeixinIdentityProviderConfig(model));
     }
 
     @Override
-    public WeixinProviderConfig createConfig() {
-        return new WeixinProviderConfig();
+    public OAuth2IdentityProviderConfig createConfig() {
+        return new OAuth2IdentityProviderConfig();
     }
 
     @Override
@@ -31,4 +37,13 @@ public class WeiXinIdentityProviderFactory extends AbstractIdentityProviderFacto
     }
 
 
+    @Override
+    public List<ProviderConfigProperty> getConfigProperties() {
+        return ProviderConfigurationBuilder.create()
+                .property().name(WeiXinIdentityProvider.CUSTOMIZED_LOGIN_URL_FOR_PC)
+                .label("PC 登录 URL")
+                .helpText("PC 登录 URL 的登录页面，可以配置为一个自定义的前端登录页面")
+                .type(ProviderConfigProperty.STRING_TYPE)
+                .add().build();
+    }
 }

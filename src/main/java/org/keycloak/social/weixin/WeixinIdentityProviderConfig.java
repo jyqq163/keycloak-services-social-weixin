@@ -1,13 +1,13 @@
 package org.keycloak.social.weixin;
 
-import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
+import org.keycloak.broker.oidc.OIDCIdentityProviderConfig;
 import org.keycloak.models.IdentityProviderModel;
 
-public class WeixinProviderConfig extends OAuth2IdentityProviderConfig {
-    public WeixinProviderConfig() {
+public class WeixinIdentityProviderConfig extends OIDCIdentityProviderConfig {
+    public WeixinIdentityProviderConfig() {
     }
 
-    public WeixinProviderConfig(IdentityProviderModel model) {
+    public WeixinIdentityProviderConfig(IdentityProviderModel model) {
         super(model);
     }
 
