@@ -2,8 +2,8 @@ package org.keycloak.social.weixin;
 
 import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
 import org.keycloak.broker.provider.AbstractIdentityProviderFactory;
-import org.keycloak.models.IdentityProviderModel;
 import org.keycloak.broker.social.SocialIdentityProviderFactory;
+import org.keycloak.models.IdentityProviderModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.provider.ProviderConfigProperty;
 import org.keycloak.provider.ProviderConfigurationBuilder;
@@ -36,6 +36,16 @@ public class WeiXinIdentityProviderFactory extends
         return PROVIDER_ID;
     }
 
+    @Override
+    public List<ProviderConfigProperty> getConfigProperties() {
+        return ProviderConfigurationBuilder.create()
+                .property().name(WeiXinIdentityProvider.CUSTOMIZED_LOGIN_URL_FOR_PC)
+                .label("PC端自定义登录URL")
+                .helpText("PC端自定义登录URL")
+                .type(ProviderConfigProperty.STRING_TYPE)
+                .add()
+                .build();
+    }
 
     @Override
     public List<ProviderConfigProperty> getConfigProperties() {
