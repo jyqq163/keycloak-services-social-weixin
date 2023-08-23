@@ -9,6 +9,10 @@ import org.keycloak.models.KeycloakSession;
 
 import java.io.IOException;
 
+import static org.keycloak.social.weixin.UserAgentHelper.isWechatBrowser;
+import static org.keycloak.social.weixin.WeiXinIdentityProvider.WECHAT_MP_APP_ID;
+import static org.keycloak.social.weixin.WeiXinIdentityProvider.WECHAT_MP_APP_SECRET;
+
 public class WeixinIdentityCustomAuth extends AbstractOAuth2IdentityProvider<OAuth2IdentityProviderConfig>
         implements SocialIdentityProvider<OAuth2IdentityProviderConfig> {
 
@@ -22,13 +26,27 @@ public class WeixinIdentityCustomAuth extends AbstractOAuth2IdentityProvider<OAu
 
     // TODO: cache mechanism
     public String getAccessToken() throws IOException {
-        System.out.printf("getAccessToken by %s%n%s%n", this.getConfig().getClientId(), this.getConfig().getClientSecret());
+        var clientId = this.getConfig().getClientId();
+        var clientSecret = this.getConfig().getClientSecret();
+
+        try {
+            String ua = session.getContext().getRequestHeaders().getHeaderString("user-agent").toLowerCase();
+
+            if (isWechatBrowser(ua)) {
+                clientId = this.getConfig().getConfig().get(WECHAT_MP_APP_ID);
+                clientSecret = this.getConfig().getConfig().get(WECHAT_MP_APP_SECRET);
+            }
+        } catch (Exception ex) {
+            logger.error(ex);
+        }
+
+        logger.info(String.format("getAccessToken by %s%n%s%n", clientId, clientSecret));
         var res =
                 SimpleHttp.doGet(String.format("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential" +
                                 "&appid=%s&secret=%s", this.getConfig().getClientId(), this.getConfig().getClientSecret()),
                         this.session).asString();
 
-        System.out.printf("res is %s%n", res);
+        logger.info(String.format("res is %s%n", res));
         var accessToken = this.extractTokenFromResponse(res, "access_token");
 //        var expiresIn = this.extractTokenFromResponse(res, "expires_in");
 
