@@ -76,7 +76,7 @@ public class WeiXinIdentityProviderTest {
     public void pcGoesToCustomizedURLIfPresent() {
         var config = new WeixinIdentityProviderConfig();
         config.setClientId("clientId");
-        config.setClientId2(WeiXinIdentityProvider.WECHAT_APPID_KEY);
+        config.setClientId2(WeiXinIdentityProvider.WECHAT_MP_APP_ID);
         config.setCustomizedLoginUrlForPc("https://another.url/path");
 
         Assert.assertEquals("set config get config", "https://another.url/path", config.getCustomizedLoginUrlForPc());

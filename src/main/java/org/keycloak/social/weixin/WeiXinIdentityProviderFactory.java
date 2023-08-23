@@ -39,23 +39,12 @@ public class WeiXinIdentityProviderFactory extends
     @Override
     public List<ProviderConfigProperty> getConfigProperties() {
         return ProviderConfigurationBuilder.create()
-                .property().name(WeiXinIdentityProvider.CUSTOMIZED_LOGIN_URL_FOR_PC)
-                .label("PC端自定义登录URL")
-                .helpText("PC端自定义登录URL")
-                .type(ProviderConfigProperty.STRING_TYPE)
-                .add()
-                .build();
-    }
-
-    @Override
-    public List<ProviderConfigProperty> getConfigProperties() {
-        return ProviderConfigurationBuilder.create()
-                .property().name(WeiXinIdentityProvider.WECHAT_APPID_KEY)
+                .property().name(WeiXinIdentityProvider.WECHAT_MP_APP_ID)
                 .label("公众号 App Id")
                 .helpText("当用户使用 PC 进行关注微信公众号即登录时，要使用的 app Id，即微信公众号（不是开放平台）的 appid")
                 .type(ProviderConfigProperty.STRING_TYPE)
                 .add()
-                .property().name(WeiXinIdentityProvider.WECHAT_APPID_SECRET)
+                .property().name(WeiXinIdentityProvider.WECHAT_MP_APP_SECRET)
                 .label("公众号 App Secret")
                 .helpText("当用户使用 PC 进行关注微信公众号即登录时，要使用的 app Secret，即微信公众号（不是开放平台）的 app secret")
                 .type(ProviderConfigProperty.STRING_TYPE)
