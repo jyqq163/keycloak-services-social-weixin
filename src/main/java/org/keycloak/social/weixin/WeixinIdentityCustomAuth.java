@@ -25,18 +25,19 @@ public class WeixinIdentityCustomAuth extends AbstractOAuth2IdentityProvider<OAu
     }
 
     // TODO: cache mechanism
-    public String getAccessToken() throws IOException {
+    public String getAccessToken(WechatLoginType wechatLoginType) throws IOException {
         var clientId = this.getConfig().getClientId();
         var clientSecret = this.getConfig().getClientSecret();
 
         try {
             String ua = session.getContext().getRequestHeaders().getHeaderString("user-agent").toLowerCase();
 
-            if (isWechatBrowser(ua)) {
+            if (!isWechatBrowser(ua) || WechatLoginType.FROM_PC_QR_CODE_SCANNING.equals(wechatLoginType)) {
                 clientId = this.getConfig().getConfig().get(WECHAT_MP_APP_ID);
                 clientSecret = this.getConfig().getConfig().get(WECHAT_MP_APP_SECRET);
             }
         } catch (Exception ex) {
+            logger.error("获取 user-agent 失败");
             logger.error(ex);
         }
 
@@ -59,8 +60,8 @@ public class WeixinIdentityCustomAuth extends AbstractOAuth2IdentityProvider<OAu
         return null;
     }
 
-    public BrokeredIdentityContext auth(String openid) throws IOException {
-        var accessToken = getAccessToken();
+    public BrokeredIdentityContext auth(String openid, WechatLoginType wechatLoginType) throws IOException {
+        var accessToken = getAccessToken(wechatLoginType);
 
         var profile = SimpleHttp.doGet(String.format("https://api.weixin.qq.com/cgi-bin/user/info?access_token=%s&openid" +
                 "=%s&lang=zh_CN", accessToken, openid), this.session).asJson();

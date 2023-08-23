@@ -157,10 +157,17 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
             logger.info(String.format("authorizationUrl = %s", authorizationUrl.toString()));
 
             String ua = request.getSession().getContext().getRequestHeaders().getHeaderString("user-agent").toLowerCase();
+            logger.info(String.format("user-agent = %s", ua));
 
             if (isWechatBrowser(ua)) {
-                return Response.seeOther(URI.create(String.format("%s#wechat_redirect", authorizationUrl))).build();
+                URI location = URI.create(String.format("%s#wechat_redirect", authorizationUrl));
+                logger.info(String.format("see other %s", location));
+
+                return Response.seeOther(location).build();
             }
+
+            logger.info(String.format("see other %s", authorizationUrl));
+
             return Response.seeOther(authorizationUrl).build();
         } catch (Exception e) {
             throw new IdentityBrokerException("Could not create authentication request because " + e,
@@ -283,7 +290,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         @GET
         public Response authResponse(@QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_STATE) String state,
                                      @QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_CODE) String authorizationCode, @QueryParam(OAuth2Constants.ERROR) String error, @QueryParam(OAuth2Constants.SCOPE_OPENID) String openid, @QueryParam("clientId") String clientId, @QueryParam("tabId") String tabId) {
-            logger.info("OAUTH2_PARAMETER_CODE=" + authorizationCode);
+            logger.info("OAUTH2_PARAMETER_CODE = " + authorizationCode);
             var wechatLoginType = WechatLoginType.FROM_PC_QR_CODE_SCANNING;
 
             if (headers != null && isWechatBrowser(headers.getHeaderString("user-agent").toLowerCase())) {
@@ -306,7 +313,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
                 if (openid != null) {
                     // TODO: use ticket here instead, and then use this ticket to get openid from sso.jiwai.win
-                    federatedIdentity = customAuth.auth(openid);
+                    federatedIdentity = customAuth.auth(openid, wechatLoginType);
 
                     setFederatedIdentity(state, federatedIdentity, customAuth.accessToken);
 
