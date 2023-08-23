@@ -24,26 +24,9 @@ To install the social weixin one has to:
 
 ## 本地开发
 
-设置 JAVA_HOME 到 11 的 jdk，然后
-
 ```shell script
 mvn install
 ```
-
-> 关于设置 JAVA_HOME，如果是 Mac 上使用了 zsh，可以在 ~/.zshrc 里面加上：
->
-> export JAVA_HOME=/usr/local/opt/openjdk
-> export PATH="${JAVA_HOME}/bin:$PATH"
->
-> 然后执行 source ~/.zshrc
->
-> 关于找到 JAVA_HOME 的路径，如果你用了 jabba，可以使用 `jabba which openjdk` 。
-> 如果使用了 jabba，指定 11 的 jdk，可以通过
-> jabba install openjdk@1.11.0
-> 来安装 java 11。如果 `jabba which openjdk` 得到的是 /Users/you/.jabba/jdk/openjdk@1.11.0，也可以通过这样来运行 `mvn install`：
-> JAVA_HOME=/Users/you/.jabba/jdk/openjdk@1.11.0/Contents/Home mvn clean install
-
-如果使用别的版本，会导致运行测试碰到一些问题，比如 https://github.com/mockito/mockito/issues/2568 。
 
 ## 跑测试
 
@@ -101,3 +84,7 @@ docker pull jefftian/keycloak-heroku:latest
 * 20200514
 
 1 增加 customizedLoginUrlForPc 功能。
+
+* 20230820
+
+1 适配 quay.io/keycloak 21.1 的版本（由于 21 既不支持老的配置页，又没有新的方式增加自定义配置页，所以只能通过导入老的 Keycloak 版本中的 微信 identity provider 配置）

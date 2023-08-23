@@ -1,10 +1,10 @@
 package org.keycloak.social.weixin.mock;
 
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.UriInfo;
 import org.keycloak.http.FormPartValue;
 
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriInfo;
 import java.security.cert.X509Certificate;
 
 public class MockedHttpRequest implements org.keycloak.http.HttpRequest {

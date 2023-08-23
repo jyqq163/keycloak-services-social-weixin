@@ -2,6 +2,7 @@ package org.keycloak.social.weixin;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.ws.rs.core.Response;
 import org.junit.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
@@ -17,12 +18,12 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.keycloak.social.weixin.mock.MockedKeycloakSession;
-import org.powermock.api.mockito.PowerMockito;
 import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import javax.ws.rs.core.Response;
+import static org.hamcrest.CoreMatchers.containsString;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({UUID.class, WeiXinIdentityProvider.class})
@@ -49,8 +50,7 @@ public class WeiXinIdentityProviderTest {
 
             weiXinIdentityProvider.performLogin(request);
         } catch (RuntimeException ex) {
-            Assert.assertEquals(ex.toString(), "org.keycloak.broker.provider.IdentityBrokerException: Could not create authentication request because java.lang.NullPointerException");
-//            Assert.assertEquals("pc goes to customized login url", "", weiXinIdentityProvider.performLogin(request));
+            Assert.assertThat(ex.toString(), containsString("org.keycloak.broker.provider.IdentityBrokerException: Could not create authentication request because java.lang.NullPointerException"));
         }
     }
 
@@ -74,7 +74,7 @@ public class WeiXinIdentityProviderTest {
 
     @Test
     public void pcGoesToCustomizedURLIfPresent() {
-        var config = new WeixinProviderConfig();
+        var config = new WeixinIdentityProviderConfig();
         config.setClientId("clientId");
         config.setClientId2(WeiXinIdentityProvider.WECHAT_APPID_KEY);
         config.setCustomizedLoginUrlForPc("https://another.url/path");
@@ -108,7 +108,7 @@ public class WeiXinIdentityProviderTest {
         final String sessionKeyResponse = "{\"session_key\":\"n1HE228Kq\\/i3HRlz\\/K71Aw==\",\"openid\":\"odrHN4p1UMWRdQfMK4xm9dtQXvf8\",\"unionid\":\"oLLUdsyyVLcjdxFXiOV2pZYuOdR0\"}";
         var expectedJsonProfile = new ObjectMapper().readTree(sessionKeyResponse);
 
-        var config = new WeixinProviderConfig();
+        var config = new WeixinIdentityProviderConfig();
         config.setWmpClientId("123456");
 
         var sut = new WeiXinIdentityProvider(null, config);

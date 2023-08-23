@@ -1,5 +1,6 @@
 package org.keycloak.social.weixin.mock;
 
+import jakarta.ws.rs.core.HttpHeaders;
 import org.keycloak.common.ClientConnection;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.http.HttpRequest;
@@ -13,7 +14,6 @@ import org.keycloak.sessions.AuthenticationSessionProvider;
 import org.keycloak.urls.UrlType;
 import org.keycloak.vault.VaultTranscriber;
 
-import javax.ws.rs.core.HttpHeaders;
 import java.net.URI;
 import java.util.Locale;
 import java.util.Map;
@@ -238,77 +238,17 @@ public class MockedKeycloakSession implements KeycloakSession {
     }
 
     @Override
+    public SingleUseObjectProvider singleUseObjects() {
+        return null;
+    }
+
+    @Override
     public void close() {
 
     }
 
     @Override
-    public UserProvider userCache() {
-        return null;
-    }
-
-    @Override
     public UserProvider users() {
-        return null;
-    }
-
-    @Override
-    public ClientProvider clientStorageManager() {
-        return null;
-    }
-
-    @Override
-    public ClientScopeProvider clientScopeStorageManager() {
-        return null;
-    }
-
-    @Override
-    public RoleProvider roleStorageManager() {
-        return null;
-    }
-
-    @Override
-    public GroupProvider groupStorageManager() {
-        return null;
-    }
-
-    @Override
-    public UserProvider userStorageManager() {
-        return null;
-    }
-
-    @Override
-    public UserCredentialManager userCredentialManager() {
-        return null;
-    }
-
-    @Override
-    public UserProvider userLocalStorage() {
-        return null;
-    }
-
-    @Override
-    public RealmProvider realmLocalStorage() {
-        return null;
-    }
-
-    @Override
-    public ClientProvider clientLocalStorage() {
-        return null;
-    }
-
-    @Override
-    public ClientScopeProvider clientScopeLocalStorage() {
-        return null;
-    }
-
-    @Override
-    public GroupProvider groupLocalStorage() {
-        return null;
-    }
-
-    @Override
-    public RoleProvider roleLocalStorage() {
         return null;
     }
 

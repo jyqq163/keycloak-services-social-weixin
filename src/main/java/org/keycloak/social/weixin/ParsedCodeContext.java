@@ -1,9 +1,8 @@
 package org.keycloak.social.weixin;
 
+import jakarta.ws.rs.core.Response;
 import org.keycloak.services.managers.ClientSessionCode;
 import org.keycloak.sessions.AuthenticationSessionModel;
-
-import javax.ws.rs.core.Response;
 
 public class ParsedCodeContext {
     public ClientSessionCode<AuthenticationSessionModel> clientSessionCode;

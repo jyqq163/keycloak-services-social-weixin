@@ -18,20 +18,14 @@ package org.keycloak.social.weixin;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
-
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.*;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.broker.oidc.AbstractOAuth2IdentityProvider;
 import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
@@ -48,7 +42,6 @@ import org.keycloak.events.EventType;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.protocol.oidc.OIDCLoginProtocol;
-import org.keycloak.provider.ProviderConfigProperty;
 import org.keycloak.services.ErrorPage;
 import org.keycloak.services.messages.Messages;
 
@@ -73,7 +66,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
     public static final String OAUTH2_PARAMETER_CLIENT_SECRET = "secret";
 
     public static final String WECHAT_APPID_KEY = "clientId2";
-    public static final String WECHATAPPIDKEY = "clientSecret2";
+    public static final String WECHAT_APPID_SECRET = "clientSecret2";
 
     public static final String WMP_APP_ID = "wmpClientId";
     public static final String WMP_APP_SECRET = "wmpClientSecret";
@@ -91,10 +84,11 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         customAuth = new WeixinIdentityCustomAuth(session, config, this);
     }
 
-    public WeiXinIdentityProvider(KeycloakSession session, WeixinProviderConfig config) {
+    public WeiXinIdentityProvider(KeycloakSession session, WeixinIdentityProviderConfig config) {
         super(session, config);
         config.setAuthorizationUrl(AUTH_URL);
         config.setTokenUrl(TOKEN_URL);
+        config.setUserInfoUrl(PROFILE_URL);
 
         customAuth = new WeixinIdentityCustomAuth(session, config, this);
     }
@@ -183,7 +177,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
      */
     private boolean isWechatBrowser(String ua) {
         String wechatAppId = getConfig().getConfig().get(WECHAT_APPID_KEY);
-        String wechatAppSecret = getConfig().getConfig().get(WECHATAPPIDKEY);
+        String wechatAppSecret = getConfig().getConfig().get(WECHAT_APPID_SECRET);
         return ua.indexOf(WECHATFLAG) > 0 && wechatAppId != null && wechatAppSecret != null
                 && !wechatAppId.isEmpty() && !wechatAppSecret.isEmpty();
     }
@@ -205,8 +199,8 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                     .queryParam(OAUTH2_PARAMETER_REDIRECT_URI, request.getRedirectUri());
         } else {
             var config = getConfig();
-            if (config instanceof WeixinProviderConfig) {
-                var customizedLoginUrlForPc = ((WeixinProviderConfig) config).getCustomizedLoginUrlForPc();
+            if (config instanceof WeixinIdentityProviderConfig) {
+                var customizedLoginUrlForPc = ((WeixinIdentityProviderConfig) config).getCustomizedLoginUrlForPc();
 
                 if (customizedLoginUrlForPc != null && !customizedLoginUrlForPc.isEmpty()) {
                     uriBuilder = UriBuilder.fromUri(customizedLoginUrlForPc);
@@ -368,7 +362,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                 return new SimpleHttp[]{SimpleHttp.doPost(WECHAT_TOKEN_URL, session)
                         .param(OAUTH2_PARAMETER_CODE, authorizationCode)
                         .param(OAUTH2_PARAMETER_CLIENT_ID, getConfig().getConfig().get(WECHAT_APPID_KEY))
-                        .param(OAUTH2_PARAMETER_CLIENT_SECRET, getConfig().getConfig().get(WECHATAPPIDKEY))
+                        .param(OAUTH2_PARAMETER_CLIENT_SECRET, getConfig().getConfig().get(WECHAT_APPID_SECRET))
                         .param(OAUTH2_PARAMETER_REDIRECT_URI, uriInfo.getAbsolutePath().toString())
                         .param(OAUTH2_PARAMETER_GRANT_TYPE, OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE), null};
             }
