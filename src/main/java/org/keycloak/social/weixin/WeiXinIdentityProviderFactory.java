@@ -54,6 +54,19 @@ public class WeiXinIdentityProviderFactory extends
                 .label("PC 登录 URL")
                 .helpText("PC 登录 URL 的登录页面，可以配置为一个自定义的前端登录页面，用来展示公众号带参二维码")
                 .type(ProviderConfigProperty.STRING_TYPE)
-                .add().build();
+                .add()
+
+                .property().name(WeiXinIdentityProvider.WMP_APP_ID)
+                .label("小程序 appId")
+                .helpText("小程序的 appid")
+                .type(ProviderConfigProperty.STRING_TYPE)
+                .add()
+                .property().name(WeiXinIdentityProvider.WMP_APP_SECRET)
+                .label("小程序 appSecret")
+                .helpText("小程序的 app secret")
+                .type(ProviderConfigProperty.STRING_TYPE)
+                .add()
+
+                .build();
     }
 }

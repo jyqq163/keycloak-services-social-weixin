@@ -26,13 +26,18 @@ public class WeixinIdentityCustomAuth extends AbstractOAuth2IdentityProvider<OAu
 
     // TODO: cache mechanism
     public String getAccessToken(WechatLoginType wechatLoginType) throws IOException {
+        logger.info("getAccessToken with " + wechatLoginType);
+
         var clientId = this.getConfig().getClientId();
         var clientSecret = this.getConfig().getClientSecret();
 
         try {
             String ua = session.getContext().getRequestHeaders().getHeaderString("user-agent").toLowerCase();
+            logger.info("ua = " + ua);
 
             if (!isWechatBrowser(ua) || WechatLoginType.FROM_PC_QR_CODE_SCANNING.equals(wechatLoginType)) {
+                logger.info("not wechat browser or from pc qr code scanning");
+
                 clientId = this.getConfig().getConfig().get(WECHAT_MP_APP_ID);
                 clientSecret = this.getConfig().getConfig().get(WECHAT_MP_APP_SECRET);
             }
@@ -44,7 +49,7 @@ public class WeixinIdentityCustomAuth extends AbstractOAuth2IdentityProvider<OAu
         logger.info(String.format("getAccessToken by %s%n%s%n", clientId, clientSecret));
         var res =
                 SimpleHttp.doGet(String.format("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential" +
-                                "&appid=%s&secret=%s", this.getConfig().getClientId(), this.getConfig().getClientSecret()),
+                                "&appid=%s&secret=%s", clientId, clientSecret),
                         this.session).asString();
 
         logger.info(String.format("res is %s%n", res));
