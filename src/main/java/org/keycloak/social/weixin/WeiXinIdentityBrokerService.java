@@ -1,10 +1,10 @@
 package org.keycloak.social.weixin;
 
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.*;
 import org.jboss.logging.Logger;
+import org.jboss.resteasy.plugins.server.BaseHttpRequest;
+import org.jboss.resteasy.specimpl.ResteasyUriInfo;
+import org.jboss.resteasy.spi.ResteasyAsynchronousContext;
 import org.keycloak.OAuthErrorException;
 import org.keycloak.authentication.AuthenticationProcessor;
 import org.keycloak.authentication.authenticators.broker.AbstractIdpAuthenticator;
@@ -28,6 +28,7 @@ import org.keycloak.protocol.LoginProtocol;
 import org.keycloak.protocol.oidc.TokenManager;
 import org.keycloak.services.ErrorPage;
 import org.keycloak.services.ErrorPageException;
+import org.keycloak.services.HttpRequestImpl;
 import org.keycloak.services.ServicesLogger;
 import org.keycloak.services.managers.AuthenticationManager;
 import org.keycloak.services.managers.AuthenticationSessionManager;
@@ -43,6 +44,7 @@ import org.keycloak.sessions.AuthenticationSessionModel;
 import org.keycloak.util.JsonSerialization;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.CancellationException;
@@ -75,15 +77,115 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
 
         if (clientConnection != null) {
             this.clientConnection = clientConnection;
+        } else {
+            this.clientConnection = new ClientConnection() {
+                @Override
+                public String getRemoteAddr() {
+                    return null;
+                }
+
+                @Override
+                public String getRemoteHost() {
+                    return null;
+                }
+
+                @Override
+                public int getRemotePort() {
+                    return 0;
+                }
+
+                @Override
+                public String getLocalAddr() {
+                    return null;
+                }
+
+                @Override
+                public int getLocalPort() {
+                    return 0;
+                }
+            };
         }
 
         if (headers != null) {
             this.headers = headers;
         }
 
-        if (request != null) {
-            this.request = request;
-        }
+        this.request = Objects.requireNonNullElseGet(request, () -> new HttpRequestImpl(new BaseHttpRequest(new ResteasyUriInfo("/", "/")) {
+            @Override
+            public HttpHeaders getHttpHeaders() {
+                return session.getContext().getRequestHeaders();
+            }
+
+            @Override
+            public MultivaluedMap<String, String> getMutableHeaders() {
+                return null;
+            }
+
+            @Override
+            public InputStream getInputStream() {
+                return null;
+            }
+
+            @Override
+            public void setInputStream(InputStream stream) {
+
+            }
+
+            @Override
+            public String getHttpMethod() {
+                return null;
+            }
+
+            @Override
+            public void setHttpMethod(String method) {
+
+            }
+
+            @Override
+            public Object getAttribute(String attribute) {
+                return null;
+            }
+
+            @Override
+            public void setAttribute(String name, Object value) {
+
+            }
+
+            @Override
+            public void removeAttribute(String name) {
+
+            }
+
+            @Override
+            public Enumeration<String> getAttributeNames() {
+                return null;
+            }
+
+            @Override
+            public ResteasyAsynchronousContext getAsyncContext() {
+                return null;
+            }
+
+            @Override
+            public void forward(String path) {
+
+            }
+
+            @Override
+            public boolean wasForwarded() {
+                return false;
+            }
+
+            @Override
+            public String getRemoteAddress() {
+                return null;
+            }
+
+            @Override
+            public String getRemoteHost() {
+                return null;
+            }
+        }));
 
         this.event = Objects.requireNonNullElseGet(event, () -> new EventBuilder(this.realmModel, this.session, this.clientConnection)).event(EventType.IDENTITY_PROVIDER_LOGIN);
     }
@@ -185,7 +287,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
             return ParsedCodeContext.clientSessionCode(WMPHelper.getClientSessionCode(this, realmModel, session, context));
         }
 
-        SessionCodeChecks checks = new SessionCodeChecks(realmModel, session.getContext().getUri(), (org.keycloak.http.HttpRequest) request, clientConnection, session, event, null, code, null, clientId, tabId, LoginActionsService.AUTHENTICATE_PATH);
+        SessionCodeChecks checks = new SessionCodeChecks(realmModel, session.getContext().getUri(), request, clientConnection, session, event, null, code, null, clientId, tabId, LoginActionsService.AUTHENTICATE_PATH);
 
         checks.initialVerify();
         if (!checks.verifyActiveAndValidAction(AuthenticationSessionModel.Action.AUTHENTICATE.name(), ClientSessionCode.ActionType.LOGIN)) {
@@ -204,7 +306,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
                     Response errorResponse = checks.getResponse();
 
                     // Remove "code" from browser history
-                    errorResponse = BrowserHistoryHelper.getInstance().saveResponseAndRedirect(session, authSession, errorResponse, true, (org.keycloak.http.HttpRequest) request);
+                    errorResponse = BrowserHistoryHelper.getInstance().saveResponseAndRedirect(session, authSession, errorResponse, true, request);
                     return ParsedCodeContext.response(errorResponse);
                 }
             } else {
@@ -422,7 +524,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
                 return JsonResponse.fromJson(JsonHelper.stringify(userSession));
             }
 
-            return AuthenticationManager.finishedRequiredActions(session, authSession, null, clientConnection, (org.keycloak.http.HttpRequest) request, session.getContext().getUri(), event);
+            return AuthenticationManager.finishedRequiredActions(session, authSession, null, clientConnection, request, session.getContext().getUri(), event);
         }
     }
 
