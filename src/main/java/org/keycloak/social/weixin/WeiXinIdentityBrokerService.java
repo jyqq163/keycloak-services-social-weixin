@@ -70,50 +70,42 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
     @Context
     private HttpHeaders headers;
 
-    public void init(KeycloakSession session, ClientConnection clientConnection, HttpHeaders headers, EventBuilder event, org.keycloak.http.HttpRequest request) {
+    public void init(KeycloakSession session, ClientConnection clientConnection, EventBuilder event, org.keycloak.http.HttpRequest request) {
         if (session != null) {
             this.session = session;
         }
 
-        if (clientConnection != null) {
-            this.clientConnection = clientConnection;
-        } else {
-            this.clientConnection = new ClientConnection() {
-                @Override
-                public String getRemoteAddr() {
-                    return null;
-                }
+        this.clientConnection = Objects.requireNonNullElseGet(clientConnection, () -> new ClientConnection() {
+            @Override
+            public String getRemoteAddr() {
+                return null;
+            }
 
-                @Override
-                public String getRemoteHost() {
-                    return null;
-                }
+            @Override
+            public String getRemoteHost() {
+                return null;
+            }
 
-                @Override
-                public int getRemotePort() {
-                    return 0;
-                }
+            @Override
+            public int getRemotePort() {
+                return 0;
+            }
 
-                @Override
-                public String getLocalAddr() {
-                    return null;
-                }
+            @Override
+            public String getLocalAddr() {
+                return null;
+            }
 
-                @Override
-                public int getLocalPort() {
-                    return 0;
-                }
-            };
-        }
-
-        if (headers != null) {
-            this.headers = headers;
-        }
+            @Override
+            public int getLocalPort() {
+                return 0;
+            }
+        });
 
         this.request = Objects.requireNonNullElseGet(request, () -> new HttpRequestImpl(new BaseHttpRequest(new ResteasyUriInfo("/", "/")) {
             @Override
             public HttpHeaders getHttpHeaders() {
-                return session.getContext().getRequestHeaders();
+                return Objects.requireNonNull(session).getContext().getRequestHeaders();
             }
 
             @Override

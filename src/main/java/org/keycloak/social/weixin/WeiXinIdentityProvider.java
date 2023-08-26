@@ -109,17 +109,21 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
     @Override
     protected BrokeredIdentityContext extractIdentityFromProfile(EventBuilder event, JsonNode profile) {
-        String uuionid = getJsonProperty(profile, "unionid");
-        BrokeredIdentityContext user = new BrokeredIdentityContext(
-                (uuionid != null && uuionid.length() > 0 ? uuionid : getJsonProperty(profile, "openid")));
+        String unionId = getJsonProperty(profile, "unionid");
+        var openId = getJsonProperty(profile, "openid");
 
-        user.setUsername(getJsonProperty(profile, "openid"));
-        user.setBrokerUserId(getJsonProperty(profile, "openid"));
-        user.setModelUsername(getJsonProperty(profile, "openid"));
+        var externalUserId = unionId != null && !unionId.isEmpty() ? unionId : openId;
+
+        BrokeredIdentityContext user = new BrokeredIdentityContext(externalUserId);
+
+        user.setUsername(externalUserId);
+        user.setBrokerUserId(externalUserId);
+        user.setModelUsername(externalUserId);
         user.setName(getJsonProperty(profile, "nickname"));
         user.setIdpConfig(getConfig());
         user.setIdp(this);
         AbstractJsonUserAttributeMapper.storeUserProfileForMapper(user, profile, getConfig().getAlias());
+
         return user;
     }
 
@@ -291,9 +295,6 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         protected ClientConnection clientConnection;
 
         @Context
-        protected HttpHeaders headers;
-
-        @Context
         protected org.keycloak.http.HttpRequest request;
 
         public Endpoint(AuthenticationCallback callback, RealmModel realm, EventBuilder event) {
@@ -308,7 +309,8 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
             logger.info(String.format("OAUTH2_PARAMETER_CODE = %s, %s, %s, %s, %s", authorizationCode, error, openid, clientId, tabId));
             var wechatLoginType = WechatLoginType.FROM_PC_QR_CODE_SCANNING;
 
-            if (headers != null && isWechatBrowser(headers.getHeaderString("user-agent").toLowerCase())) {
+            String ua = session.getContext().getRequestHeaders().getHeaderString("user-agent").toLowerCase();
+            if (isWechatBrowser(ua)) {
                 logger.info("user-agent=wechat");
                 wechatLoginType = WechatLoginType.FROM_WECHAT_BROWSER;
             }
@@ -365,7 +367,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         private Response authenticated(BrokeredIdentityContext federatedIdentity) {
             var weiXinIdentityBrokerService =
                     new WeiXinIdentityBrokerService(realm);
-            weiXinIdentityBrokerService.init(session, clientConnection, headers, event, request);
+            weiXinIdentityBrokerService.init(session, clientConnection, event, request);
 
             return weiXinIdentityBrokerService.authenticated(federatedIdentity);
         }
