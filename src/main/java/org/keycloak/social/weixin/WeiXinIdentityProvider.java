@@ -51,8 +51,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth2IdentityProviderConfig>
         implements SocialIdentityProvider<OAuth2IdentityProviderConfig> {
 
+    private static final String TOKEN_URL = "https://api.weixin.qq.com/sns/oauth2/access_token";
+
     public static final String OPEN_AUTH_URL = "https://open.weixin.qq.com/connect/qrconnect";
-    public static final String OPEN_TOKEN_URL = "https://api.weixin.qq.com/sns/oauth2/access_token";
     public static final String OPEN_DEFAULT_SCOPE = "snsapi_login";
     public static final String OAUTH2_PARAMETER_CLIENT_ID = "appid";
     public static final String OAUTH2_PARAMETER_CLIENT_SECRET = "secret";
@@ -62,7 +63,6 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
     public static final String OPEN_CLIENT_ENABLED = "openClientEnabled";
 
     public static final String WECHAT_MOBILE_AUTH_URL = "https://open.weixin.qq.com/connect/oauth2/authorize";
-    public static final String WECHAT_MP_TOKEN_URL = OPEN_TOKEN_URL;
     public static final String WECHAT_MP_DEFAULT_SCOPE = "snsapi_userinfo";
     public static final String CUSTOMIZED_LOGIN_URL_FOR_PC = "customizedLoginUrl";
     public static final String WECHAT_MP_APP_ID = "clientId2";
@@ -82,7 +82,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
     public WeiXinIdentityProvider(KeycloakSession session, OAuth2IdentityProviderConfig config) {
         super(session, config);
         config.setAuthorizationUrl(OPEN_AUTH_URL);
-        config.setTokenUrl(OPEN_TOKEN_URL);
+        config.setTokenUrl(TOKEN_URL);
 
         customAuth = new WeixinIdentityCustomAuth(session, config, this);
     }
@@ -90,7 +90,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
     public WeiXinIdentityProvider(KeycloakSession session, WeixinIdentityProviderConfig config) {
         super(session, config);
         config.setAuthorizationUrl(OPEN_AUTH_URL);
-        config.setTokenUrl(OPEN_TOKEN_URL);
+        config.setTokenUrl(TOKEN_URL);
         config.setUserInfoUrl(PROFILE_URL);
 
         customAuth = new WeixinIdentityCustomAuth(session, config, this);
@@ -389,9 +389,9 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                 var mobileMpClientId = getConfig().getClientId();
                 var mobileMpClientSecret = getConfig().getClientSecret();
 
-                logger.info(String.format("from wechat browser, posting to %s, with mobileMpClientId = %s, mobileMpClientSecret = %s", WECHAT_MOBILE_AUTH_URL, mobileMpClientId, mobileMpClientSecret));
+                logger.info(String.format("from wechat browser, posting to %s for fetching token, with mobileMpClientId = %s, mobileMpClientSecret = %s", getConfig().getTokenUrl(), mobileMpClientId, mobileMpClientSecret));
 
-                return new SimpleHttp[]{SimpleHttp.doPost(WECHAT_MOBILE_AUTH_URL, session)
+                return new SimpleHttp[]{SimpleHttp.doPost(getConfig().getTokenUrl(), session)
                         .param(OAUTH2_PARAMETER_CODE, authorizationCode)
                         .param(OAUTH2_PARAMETER_CLIENT_ID, mobileMpClientId)
                         .param(OAUTH2_PARAMETER_CLIENT_SECRET, mobileMpClientSecret)
