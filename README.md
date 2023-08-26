@@ -111,3 +111,21 @@ docker pull jefftian/keycloak-heroku:latest
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=Jeff-Tian/keycloak-services-social-weixin&type=Date)](https://star-history.com/#Jeff-Tian/keycloak-services-social-weixin&Date)
+
+## 原理
+
+### 开放平台微信登录
+
+#### 先构建授权链接
+
+链接如下：
+
+```
+https://open.weixin.qq.com/connect/qrconnect?scope=snsapi_login&state=d3Yvfou3pdgp-UNVZ-i7DTDEbv4rZTWx6Wh7lmxzyvk.98VO-haMdj4.c0L0bnybTEatKpqInU02nQ&response_type=code&appid=wxc09e145146844e43&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Frealms%2Fmaster%2Fbroker%2Fweixin%2Fendpoint
+```
+
+用户使用微信扫描以上链接中展示的二维码后，会跳转到微信的授权页面，用户点击同意后，会跳转到我们的回调地址，并且带上 code 和 state 参数，如下：
+
+```
+https://keycloak.jiwai.win/realms/master/broker/weixin/endpoint?code=011er8000zwPzQ1Fvw200DTBCP1er80K&state=d3Yvfou3pdgp-UNVZ-i7DTDEbv4rZTWx6Wh7lmxzyvk.98VO-haMdj4.c0L0bnybTEatKpqInU02nQ
+```

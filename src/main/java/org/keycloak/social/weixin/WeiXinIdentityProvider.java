@@ -51,22 +51,24 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth2IdentityProviderConfig>
         implements SocialIdentityProvider<OAuth2IdentityProviderConfig> {
 
-    public static final String AUTH_URL = "https://open.weixin.qq.com/connect/qrconnect";
-    public static final String TOKEN_URL = "https://api.weixin.qq.com/sns/oauth2/access_token";
-    public static final String DEFAULT_SCOPE = "snsapi_login";
-
-    public static final String WECHAT_AUTH_URL = "https://open.weixin.qq.com/connect/oauth2/authorize";
-    public static final String WECHAT_TOKEN_URL = "https://api.weixin.qq.com/sns/oauth2/access_token";
-    public static final String WECHAT_DEFAULT_SCOPE = "snsapi_userinfo";
-    public static final String CUSTOMIZED_LOGIN_URL_FOR_PC = "customizedLoginUrl";
-
-    public static final String PROFILE_URL = "https://api.weixin.qq.com/sns/userinfo?access_token=ACCESS_TOKEN&openid=OPENID&lang=zh_CN";
-
+    public static final String OPEN_AUTH_URL = "https://open.weixin.qq.com/connect/qrconnect";
+    public static final String OPEN_TOKEN_URL = "https://api.weixin.qq.com/sns/oauth2/access_token";
+    public static final String OPEN_DEFAULT_SCOPE = "snsapi_login";
     public static final String OAUTH2_PARAMETER_CLIENT_ID = "appid";
     public static final String OAUTH2_PARAMETER_CLIENT_SECRET = "secret";
 
+    public static final String OPEN_CLIENT_ID = "openClientId";
+    public static final String OPEN_CLIENT_SECRET = "openClientSecret";
+    public static final String OPEN_CLIENT_ENABLED = "openClientEnabled";
+
+    public static final String WECHAT_MOBILE_AUTH_URL = "https://open.weixin.qq.com/connect/oauth2/authorize";
+    public static final String WECHAT_MP_TOKEN_URL = OPEN_TOKEN_URL;
+    public static final String WECHAT_MP_DEFAULT_SCOPE = "snsapi_userinfo";
+    public static final String CUSTOMIZED_LOGIN_URL_FOR_PC = "customizedLoginUrl";
     public static final String WECHAT_MP_APP_ID = "clientId2";
     public static final String WECHAT_MP_APP_SECRET = "clientSecret2";
+
+    public static final String PROFILE_URL = "https://api.weixin.qq.com/sns/userinfo?access_token=ACCESS_TOKEN&openid=OPENID&lang=zh_CN";
 
     public static final String WMP_APP_ID = "wmpClientId";
     public static final String WMP_APP_SECRET = "wmpClientSecret";
@@ -74,20 +76,21 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
     public static final String OPENID = "openid";
     public static final String WECHATFLAG = "micromessenger";
+
     public final WeixinIdentityCustomAuth customAuth;
 
     public WeiXinIdentityProvider(KeycloakSession session, OAuth2IdentityProviderConfig config) {
         super(session, config);
-        config.setAuthorizationUrl(AUTH_URL);
-        config.setTokenUrl(TOKEN_URL);
+        config.setAuthorizationUrl(OPEN_AUTH_URL);
+        config.setTokenUrl(OPEN_TOKEN_URL);
 
         customAuth = new WeixinIdentityCustomAuth(session, config, this);
     }
 
     public WeiXinIdentityProvider(KeycloakSession session, WeixinIdentityProviderConfig config) {
         super(session, config);
-        config.setAuthorizationUrl(AUTH_URL);
-        config.setTokenUrl(TOKEN_URL);
+        config.setAuthorizationUrl(OPEN_AUTH_URL);
+        config.setTokenUrl(OPEN_TOKEN_URL);
         config.setUserInfoUrl(PROFILE_URL);
 
         customAuth = new WeixinIdentityCustomAuth(session, config, this);
@@ -177,7 +180,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
     @Override
     protected String getDefaultScopes() {
-        return DEFAULT_SCOPE;
+        return OPEN_DEFAULT_SCOPE;
     }
 
     /**
@@ -201,8 +204,8 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
         if (isWechatBrowser(ua)) {// 是微信浏览器
             logger.info("----------wechat");
-            uriBuilder = UriBuilder.fromUri(WECHAT_AUTH_URL);
-            uriBuilder.queryParam(OAUTH2_PARAMETER_SCOPE, WECHAT_DEFAULT_SCOPE)
+            uriBuilder = UriBuilder.fromUri(WECHAT_MOBILE_AUTH_URL);
+            uriBuilder.queryParam(OAUTH2_PARAMETER_SCOPE, WECHAT_MP_DEFAULT_SCOPE)
                     .queryParam(OAUTH2_PARAMETER_STATE, request.getState().getEncoded())
                     .queryParam(OAUTH2_PARAMETER_RESPONSE_TYPE, "code")
                     .queryParam(OAUTH2_PARAMETER_CLIENT_ID, getConfig().getClientId())
@@ -210,30 +213,42 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         } else {
             var config = getConfig();
             if (config instanceof WeixinIdentityProviderConfig) {
+                if (config.getConfig().get(OPEN_CLIENT_ENABLED) != null && config.getConfig().get(OPEN_CLIENT_ENABLED).equals("true")) {
+                    logger.info("----------open client enabled");
+                    uriBuilder = UriBuilder.fromUri(OPEN_AUTH_URL);
+                    uriBuilder.queryParam(OAUTH2_PARAMETER_SCOPE, OPEN_DEFAULT_SCOPE)
+                            .queryParam(OAUTH2_PARAMETER_STATE, request.getState().getEncoded())
+                            .queryParam(OAUTH2_PARAMETER_RESPONSE_TYPE, "code")
+                            .queryParam(OAUTH2_PARAMETER_CLIENT_ID, config.getConfig().get(OPEN_CLIENT_ID))
+                            .queryParam(OAUTH2_PARAMETER_REDIRECT_URI, request.getRedirectUri());
+
+                    return uriBuilder;
+                }
+
                 var customizedLoginUrlForPc = ((WeixinIdentityProviderConfig) config).getCustomizedLoginUrlForPc();
 
                 if (customizedLoginUrlForPc != null && !customizedLoginUrlForPc.isEmpty()) {
                     uriBuilder = UriBuilder.fromUri(customizedLoginUrlForPc);
 
-                    uriBuilder.queryParam(OAUTH2_PARAMETER_SCOPE, WECHAT_DEFAULT_SCOPE)
+                    uriBuilder.queryParam(OAUTH2_PARAMETER_SCOPE, WECHAT_MP_DEFAULT_SCOPE)
                             .queryParam(OAUTH2_PARAMETER_STATE, request.getState().getEncoded())
                             .queryParam(OAUTH2_PARAMETER_RESPONSE_TYPE, "code")
-                            .queryParam(OAUTH2_PARAMETER_CLIENT_ID, getConfig().getConfig().get(WECHAT_MP_APP_ID))
+                            .queryParam(OAUTH2_PARAMETER_CLIENT_ID, config.getConfig().get(WECHAT_MP_APP_ID))
                             .queryParam(OAUTH2_PARAMETER_REDIRECT_URI, request.getRedirectUri());
 
                     return uriBuilder;
                 } else {
-                    uriBuilder = UriBuilder.fromUri(getConfig().getAuthorizationUrl());
-                    uriBuilder.queryParam(OAUTH2_PARAMETER_SCOPE, getConfig().getDefaultScope())
+                    uriBuilder = UriBuilder.fromUri(config.getAuthorizationUrl());
+                    uriBuilder.queryParam(OAUTH2_PARAMETER_SCOPE, config.getDefaultScope())
                             .queryParam(OAUTH2_PARAMETER_STATE, request.getState().getEncoded())
-                            .queryParam(OAUTH2_PARAMETER_CLIENT_ID, getConfig().getClientId())
+                            .queryParam(OAUTH2_PARAMETER_CLIENT_ID, config.getClientId())
                             .queryParam(OAUTH2_PARAMETER_REDIRECT_URI, request.getRedirectUri());
                 }
             } else {
-                uriBuilder = UriBuilder.fromUri(getConfig().getAuthorizationUrl());
-                uriBuilder.queryParam(OAUTH2_PARAMETER_SCOPE, getConfig().getDefaultScope())
+                uriBuilder = UriBuilder.fromUri(config.getAuthorizationUrl());
+                uriBuilder.queryParam(OAUTH2_PARAMETER_SCOPE, config.getDefaultScope())
                         .queryParam(OAUTH2_PARAMETER_STATE, request.getState().getEncoded())
-                        .queryParam(OAUTH2_PARAMETER_CLIENT_ID, getConfig().getClientId())
+                        .queryParam(OAUTH2_PARAMETER_CLIENT_ID, config.getClientId())
                         .queryParam(OAUTH2_PARAMETER_REDIRECT_URI, request.getRedirectUri());
             }
         }
@@ -290,7 +305,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         @GET
         public Response authResponse(@QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_STATE) String state,
                                      @QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_CODE) String authorizationCode, @QueryParam(OAuth2Constants.ERROR) String error, @QueryParam(OAuth2Constants.SCOPE_OPENID) String openid, @QueryParam("clientId") String clientId, @QueryParam("tabId") String tabId) {
-            logger.info("OAUTH2_PARAMETER_CODE = " + authorizationCode);
+            logger.info(String.format("OAUTH2_PARAMETER_CODE = %s, %s, %s, %s, %s", authorizationCode, error, openid, clientId, tabId));
             var wechatLoginType = WechatLoginType.FROM_PC_QR_CODE_SCANNING;
 
             if (headers != null && isWechatBrowser(headers.getHeaderString("user-agent").toLowerCase())) {
@@ -369,8 +384,8 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         public SimpleHttp[] generateTokenRequest(String authorizationCode, WechatLoginType wechatLoginType) {
             logger.info(String.format("generateTokenRequest, code = %s, loginType = %s", authorizationCode, wechatLoginType));
             if (WechatLoginType.FROM_WECHAT_BROWSER.equals(wechatLoginType)) {
-                logger.info(String.format("from wechat browser, posting to %s", WECHAT_TOKEN_URL));
-                return new SimpleHttp[]{SimpleHttp.doPost(WECHAT_TOKEN_URL, session)
+                logger.info(String.format("from wechat browser, posting to %s", WECHAT_MP_TOKEN_URL));
+                return new SimpleHttp[]{SimpleHttp.doPost(WECHAT_MP_TOKEN_URL, session)
                         .param(OAUTH2_PARAMETER_CODE, authorizationCode)
                         .param(OAUTH2_PARAMETER_CLIENT_ID, getConfig().getConfig().get(WECHAT_MP_APP_ID))
                         .param(OAUTH2_PARAMETER_CLIENT_SECRET, getConfig().getConfig().get(WECHAT_MP_APP_SECRET))
@@ -387,6 +402,16 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                         session);
 
                 return new SimpleHttp[]{wechatSession, tokenRes};
+            }
+
+            var isOpenClientEnabled = getConfig().getConfig().get(OPEN_CLIENT_ENABLED);
+
+            if (isOpenClientEnabled.equals("true")) {
+                return new SimpleHttp[]{SimpleHttp.doPost(getConfig().getTokenUrl(), session).param(OAUTH2_PARAMETER_CODE, authorizationCode)
+                        .param(OAUTH2_PARAMETER_CLIENT_ID, getConfig().getConfig().get(OPEN_CLIENT_ID))
+                        .param(OAUTH2_PARAMETER_CLIENT_SECRET, getConfig().getConfig().get(OPEN_CLIENT_SECRET))
+                        .param(OAUTH2_PARAMETER_REDIRECT_URI, getConfig().getConfig().get(OAUTH2_PARAMETER_REDIRECT_URI))
+                        .param(OAUTH2_PARAMETER_GRANT_TYPE, OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE), null};
             }
 
             return new SimpleHttp[]{SimpleHttp.doPost(getConfig().getTokenUrl(), session).param(OAUTH2_PARAMETER_CODE, authorizationCode)
