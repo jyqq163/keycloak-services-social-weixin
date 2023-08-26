@@ -386,11 +386,15 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         public SimpleHttp[] generateTokenRequest(String authorizationCode, WechatLoginType wechatLoginType) {
             logger.info(String.format("generateTokenRequest, code = %s, loginType = %s", authorizationCode, wechatLoginType));
             if (WechatLoginType.FROM_WECHAT_BROWSER.equals(wechatLoginType)) {
-                logger.info(String.format("from wechat browser, posting to %s", WECHAT_MP_TOKEN_URL));
-                return new SimpleHttp[]{SimpleHttp.doPost(WECHAT_MP_TOKEN_URL, session)
+                var mobileMpClientId = getConfig().getClientId();
+                var mobileMpClientSecret = getConfig().getClientSecret();
+
+                logger.info(String.format("from wechat browser, posting to %s, with mobileMpClientId = %s, mobileMpClientSecret = %s", WECHAT_MOBILE_AUTH_URL, mobileMpClientId, mobileMpClientSecret));
+
+                return new SimpleHttp[]{SimpleHttp.doPost(WECHAT_MOBILE_AUTH_URL, session)
                         .param(OAUTH2_PARAMETER_CODE, authorizationCode)
-                        .param(OAUTH2_PARAMETER_CLIENT_ID, getConfig().getConfig().get(WECHAT_MP_APP_ID))
-                        .param(OAUTH2_PARAMETER_CLIENT_SECRET, getConfig().getConfig().get(WECHAT_MP_APP_SECRET))
+                        .param(OAUTH2_PARAMETER_CLIENT_ID, mobileMpClientId)
+                        .param(OAUTH2_PARAMETER_CLIENT_SECRET, mobileMpClientSecret)
                         .param(OAUTH2_PARAMETER_REDIRECT_URI, getConfig().getConfig().get(OAUTH2_PARAMETER_REDIRECT_URI))
                         .param(OAUTH2_PARAMETER_GRANT_TYPE, OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE), null};
             }
