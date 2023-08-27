@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import org.keycloak.models.UserModel;
+import org.keycloak.social.weixin.helpers.JsonHelper;
 
 import java.lang.reflect.Type;
 import java.util.Objects;

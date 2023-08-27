@@ -41,6 +41,8 @@ import org.keycloak.services.resources.SessionCodeChecks;
 import org.keycloak.services.util.BrowserHistoryHelper;
 import org.keycloak.services.validation.Validation;
 import org.keycloak.sessions.AuthenticationSessionModel;
+import org.keycloak.social.weixin.helpers.JsonHelper;
+import org.keycloak.social.weixin.helpers.WMPHelper;
 import org.keycloak.util.JsonSerialization;
 
 import java.io.IOException;

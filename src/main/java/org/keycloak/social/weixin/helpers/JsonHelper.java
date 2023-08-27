@@ -1,8 +1,11 @@
-package org.keycloak.social.weixin;
+package org.keycloak.social.weixin.helpers;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.keycloak.models.UserModel;
+import org.keycloak.social.weixin.UserModelSerializer;
+import org.keycloak.social.weixin.WMPUserSessionModel;
+import org.keycloak.social.weixin.WMPUserSessionModelSerializer;
 
 import java.lang.reflect.Type;
 

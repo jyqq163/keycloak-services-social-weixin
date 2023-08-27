@@ -47,6 +47,8 @@ import org.keycloak.services.messages.Messages;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.keycloak.social.weixin.helpers.UserAgentHelper;
+import org.keycloak.social.weixin.helpers.WMPHelper;
 
 public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth2IdentityProviderConfig>
         implements SocialIdentityProvider<OAuth2IdentityProviderConfig> {
@@ -166,7 +168,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
             String ua = request.getSession().getContext().getRequestHeaders().getHeaderString("user-agent").toLowerCase();
             logger.info(String.format("user-agent = %s", ua));
 
-            if (isWechatBrowser(ua)) {
+            if (UserAgentHelper.isWechatBrowser(ua)) {
                 URI location = URI.create(String.format("%s#wechat_redirect", authorizationUrl));
                 logger.info(String.format("see other %s", location));
 
@@ -187,26 +189,14 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         return OPEN_DEFAULT_SCOPE;
     }
 
-    /**
-     * 判断是否在微信浏览器里面请求
-     *
-     * @param ua 浏览器user-agent
-     * @return
-     */
-    private boolean isWechatBrowser(String ua) {
-        String wechatAppId = getConfig().getConfig().get(WECHAT_MP_APP_ID);
-        String wechatAppSecret = getConfig().getConfig().get(WECHAT_MP_APP_SECRET);
-        return ua.indexOf(WECHATFLAG) > 0 && wechatAppId != null && wechatAppSecret != null
-                && !wechatAppId.isEmpty() && !wechatAppSecret.isEmpty();
-    }
-
 
     @Override
     protected UriBuilder createAuthorizationUrl(AuthenticationRequest request) {
         final UriBuilder uriBuilder;
         String ua = request.getSession().getContext().getRequestHeaders().getHeaderString("user-agent").toLowerCase();
+        logger.info(String.format("creating auth url from %s", ua));
 
-        if (isWechatBrowser(ua)) {// 是微信浏览器
+        if (UserAgentHelper.isWechatBrowser(ua)) {// 是微信浏览器
             logger.info("----------wechat");
             uriBuilder = UriBuilder.fromUri(WECHAT_MOBILE_AUTH_URL);
             uriBuilder.queryParam(OAUTH2_PARAMETER_SCOPE, WECHAT_MP_DEFAULT_SCOPE)
@@ -214,6 +204,8 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                     .queryParam(OAUTH2_PARAMETER_RESPONSE_TYPE, "code")
                     .queryParam(OAUTH2_PARAMETER_CLIENT_ID, getConfig().getClientId())
                     .queryParam(OAUTH2_PARAMETER_REDIRECT_URI, request.getRedirectUri());
+
+            return uriBuilder;
         } else {
             var config = getConfig();
             if (config instanceof WeixinIdentityProviderConfig) {
@@ -310,7 +302,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
             var wechatLoginType = WechatLoginType.FROM_PC_QR_CODE_SCANNING;
 
             String ua = session.getContext().getRequestHeaders().getHeaderString("user-agent").toLowerCase();
-            if (isWechatBrowser(ua)) {
+            if (UserAgentHelper.isWechatBrowser(ua)) {
                 logger.info("user-agent=wechat");
                 wechatLoginType = WechatLoginType.FROM_WECHAT_BROWSER;
             }

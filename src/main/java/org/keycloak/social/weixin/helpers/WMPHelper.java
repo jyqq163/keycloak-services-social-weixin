@@ -1,10 +1,13 @@
-package org.keycloak.social.weixin;
+package org.keycloak.social.weixin.helpers;
 
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.broker.provider.util.IdentityBrokerState;
 import org.keycloak.models.*;
 import org.keycloak.services.managers.ClientSessionCode;
 import org.keycloak.sessions.AuthenticationSessionModel;
+import org.keycloak.social.weixin.AuthenticatedWMPSession;
+import org.keycloak.social.weixin.WMPUserSessionModel;
+import org.keycloak.social.weixin.WeiXinIdentityBrokerService;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -18,7 +21,7 @@ public class WMPHelper {
         return new WMPUserSessionModel(context, federatedUser, authSession);
     }
 
-    static ClientSessionCode getClientSessionCode(WeiXinIdentityBrokerService weiXinIdentityBrokerService, RealmModel realmModel, KeycloakSession session, BrokeredIdentityContext context) {
+    public static ClientSessionCode getClientSessionCode(WeiXinIdentityBrokerService weiXinIdentityBrokerService, RealmModel realmModel, KeycloakSession session, BrokeredIdentityContext context) {
         final UserModel userModel = new UserModel() {
             @Override
             public String getId() {

@@ -1,4 +1,4 @@
-package org.keycloak.social.weixin;
+package org.keycloak.social.weixin.helpers;
 
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
@@ -6,6 +6,9 @@ import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.models.*;
 import org.keycloak.sessions.AuthenticationSessionModel;
 import org.keycloak.sessions.RootAuthenticationSessionModel;
+import org.keycloak.social.weixin.WMPUserSessionModel;
+import org.keycloak.social.weixin.helpers.JsonHelper;
+import org.keycloak.social.weixin.helpers.WMPHelper;
 
 import java.util.List;
 import java.util.Map;
