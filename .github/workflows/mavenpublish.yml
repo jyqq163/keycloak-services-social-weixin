@@ -5,7 +5,7 @@ name: Maven Package
 
 on:
   release:
-    types: [created]
+    types: [released]
 
 jobs:
   build:
@@ -35,7 +35,7 @@ jobs:
 #    - name: Set up Apache Maven Central
 #      uses: actions/setup-java@v1
 #      with: # running setup-java again overwrites the settings.xml
-#        java-version: 14
+#        java-version: 18
 #        server-id: maven # Value of the distributionManagement/repository/id field of the pom.xml
 #        server-username: MAVEN_USERNAME # env variable for username in deploy
 #        server-password: MAVEN_CENTRAL_TOKEN # env variable for token in deploy
