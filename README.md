@@ -2,7 +2,7 @@
 
 [English](README_en-US.md)
 
-> Keycloak 的微信登录插件
+> Keycloak 的微信登录插件，尝试在 Keycloak 里打通整个微信生态。
 
 ![Java CI with Maven](https://github.com/Jeff-Tian/keycloak-services-social-weixin/workflows/Java%20CI%20with%20Maven/badge.svg)
 ![Maven Package](https://github.com/Jeff-Tian/keycloak-services-social-weixin/workflows/Maven%20Package/badge.svg)
@@ -106,7 +106,9 @@ docker pull jefftian/keycloak-heroku:latest
     - 适配 quay.io/keycloak 21.1 的版本（由于 21 既不支持老的配置页，又没有新的方式增加自定义配置页，所以只能通过导入老的 Keycloak 版本中的 微信 identity provider 配置）
 
 * 20230823
-    - 适配 quay.io/keycloak 22.0.1 的版本，可以正常显示所有的配置了！![](./assets/config.png)
+    - 适配 quay.io/keycloak 22.0.1 的版本，可以正常显示所有的配置了！[【重磅更新】关注微信公众号即登录插件升级支持 Keycloak 22！ - Jeff Tian的文章 - 知乎](https://zhuanlan.zhihu.com/p/652167012) ![](./assets/config.png)
+* 20230827
+    - 新增对微信开放平台的支持。 [【继续更新】尝试在 Keycloak 里打通整个微信生态 - Jeff Tian的文章 - 知乎](https://zhuanlan.zhihu.com/p/652566471)
 
 ## Star History
 
