@@ -234,6 +234,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
                     return uriBuilder;
                 } else {
+                    // 未启用开放平台，且未配置自定义登录页面，则返回一个 html 页面，展示带参二维码
                     uriBuilder = UriBuilder.fromUri(config.getAuthorizationUrl());
                     uriBuilder.queryParam(OAUTH2_PARAMETER_SCOPE, config.getDefaultScope())
                             .queryParam(OAUTH2_PARAMETER_STATE, request.getState().getEncoded())
