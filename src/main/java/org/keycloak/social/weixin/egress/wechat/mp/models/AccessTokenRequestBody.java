@@ -1,4 +1,4 @@
-package org.keycloak.social.weixin.egress.wechat.mp;
+package org.keycloak.social.weixin.egress.wechat.mp.models;
 
 public class AccessTokenRequestBody {
     public String grant_type;

@@ -47,6 +47,10 @@ import org.keycloak.services.messages.Messages;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.keycloak.social.weixin.egress.wechat.mp.WechatMpApi;
+import org.keycloak.social.weixin.egress.wechat.mp.models.ActionInfo;
+import org.keycloak.social.weixin.egress.wechat.mp.models.Scene;
+import org.keycloak.social.weixin.egress.wechat.mp.models.TicketRequest;
 import org.keycloak.social.weixin.helpers.UserAgentHelper;
 import org.keycloak.social.weixin.helpers.WMPHelper;
 
@@ -234,12 +238,19 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
                     return uriBuilder;
                 } else {
-                    // 未启用开放平台，且未配置自定义登录页面，则返回一个 html 页面，展示带参二维码
-                    uriBuilder = UriBuilder.fromUri(config.getAuthorizationUrl());
-                    uriBuilder.queryParam(OAUTH2_PARAMETER_SCOPE, config.getDefaultScope())
-                            .queryParam(OAUTH2_PARAMETER_STATE, request.getState().getEncoded())
-                            .queryParam(OAUTH2_PARAMETER_CLIENT_ID, config.getClientId())
-                            .queryParam(OAUTH2_PARAMETER_REDIRECT_URI, request.getRedirectUri());
+                    logger.info("未启用开放平台，且未配置自定义登录页面，则返回一个 html 页面，展示带参二维码");
+                    uriBuilder = UriBuilder.fromUri("/realms/" + request.getRealm().getName() + "/QrCodeResourceProviderFactory/mp-qr");
+
+                    var wechatApi = new WechatMpApi(
+                            config.getConfig().get(WECHAT_MP_APP_ID),
+                            config.getConfig().get(WECHAT_MP_APP_SECRET),
+                            session
+                    );
+
+                    var ticketUrl = wechatApi.createTmpQrCode(new TicketRequest(2592000, "QR_STR_SCENE", new ActionInfo(new Scene("1")))).url;
+                    logger.info("ticketUrl = " + ticketUrl);
+
+                    uriBuilder.queryParam("ticket-url", ticketUrl);
                 }
             } else {
                 uriBuilder = UriBuilder.fromUri(config.getAuthorizationUrl());
