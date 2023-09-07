@@ -130,7 +130,7 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
         data.put("ticketCreatedAt", ticketCreatedAt.toString());
         data.put("status", status);
         data.put("openid", openid);
-        data.put("scannedAt", scannedAt.toString());
+        data.put("scannedAt", Objects.toString(scannedAt, null));
 
         var objectMapper = new ObjectMapper();
         var json = objectMapper.writeValueAsString(data);
