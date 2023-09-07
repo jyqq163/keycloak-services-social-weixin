@@ -1,9 +1,11 @@
 package org.keycloak.social.weixin.resources;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.SneakyThrows;
+import org.apache.commons.collections4.map.HashedMap;
 import org.jboss.logging.Logger;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.services.resource.RealmResourceProvider;
@@ -67,7 +69,7 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
                     <script type="text/javascript">
                     
                         async function fetchQrScanStatus() {
-                            const res = await fetch(`mp-qr-scan-status?ticket=${%s}`, {
+                            const res = await fetch(`mp-qr-scan-status?ticket=%s`, {
                                 headers: {
                                     'Content-Type': 'application/json'
                                 }
@@ -76,7 +78,7 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
                             const {status, openid} = await res.json()
                     
                             if (openid) {
-                                window.location.href = `%s?openid=${openid}&state=${%s}`
+                                window.location.href = `%s?openid=${openid}&state=%s`
                             } else {
                                 setTimeout(fetchQrScanStatus, 1000)
                             }
@@ -94,6 +96,7 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
         return Response.ok(htmlContent, MediaType.TEXT_HTML_TYPE).build();
     }
 
+    @SneakyThrows
     @GET
     @Path("mp-qr-scan-status")
     @Produces(MediaType.APPLICATION_JSON)
@@ -113,22 +116,25 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
         var openid = ticketEntity.getOpenid();
         var scannedAt = ticketEntity.getScannedAt();
 
-        if ((Long) expireSeconds < System.currentTimeMillis() / 1000 - (Long) ticketCreatedAt) {
+        if (expireSeconds.longValue() < (System.currentTimeMillis() / 1000 - ticketCreatedAt.longValue())) {
             status = "expired";
 
             ticketEntity.setStatus(status);
             this.ticketStatusProvider.saveTicketStatus(ticketEntity);
         }
 
-        logger.info(String.format("ticket is %s%n, status is %s%n", ticket, status));
-        return Response.ok(Map.of(
-                "ticket", ticket,
-                "expireSeconds", expireSeconds,
-                "ticketCreatedAt", ticketCreatedAt,
-                "status", status,
-                "openid", openid,
-                "scannedAt", scannedAt
-        )).build();
+        logger.info(String.format("ticket is %s%n, status is %s%n, openid is %s", ticket, status, openid));
+        Map<String, String> data = new HashedMap<>();
+        data.put("ticket", ticket);
+        data.put("expireSeconds", expireSeconds.toString());
+        data.put("ticketCreatedAt", ticketCreatedAt.toString());
+        data.put("status", status);
+        data.put("openid", openid);
+        data.put("scannedAt", scannedAt.toString());
+
+        var objectMapper = new ObjectMapper();
+        var json = objectMapper.writeValueAsString(data);
+        return Response.ok(json, MediaType.APPLICATION_JSON).build();
     }
 
     @SneakyThrows
