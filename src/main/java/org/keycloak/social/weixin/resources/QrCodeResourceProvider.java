@@ -17,6 +17,8 @@ import java.io.StringReader;
 import java.util.Map;
 import java.util.Objects;
 
+import static org.keycloak.broker.oidc.AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_REDIRECT_URI;
+
 public class QrCodeResourceProvider implements RealmResourceProvider {
     private final KeycloakSession session;
     protected static final Logger logger = Logger.getLogger(QrCodeResourceProvider.class);
@@ -48,20 +50,45 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
     @GET
     @Path("mp-qr")
     @Produces(MediaType.TEXT_HTML)
-    public Response mpQrUrl(@QueryParam("ticket") String ticket, @QueryParam("qr-code-url") String qrCodeUrl) {
+    public Response mpQrUrl(@QueryParam("ticket") String ticket, @QueryParam("qr-code-url") String qrCodeUrl, @QueryParam("state") String state, @QueryParam(OAUTH2_PARAMETER_REDIRECT_URI) String redirectUri) {
         logger.info("展示一个 HTML 页面，该页面使用 React 展示一个组件，它调用一个后端 API，得到一个带参二维码 URL，并将该 URL 作为 img 的 src 属性值");
 
-        String htmlContent = "<!DOCTYPE html>\n" +
-                "<html>\n" +
-                "<head>\n" +
-                "    <title>QR Code Page</title>\n" +
-                "</head>\n" +
-                "<body>\n" +
-                "    <div id=\"qrCodeContainer\">\n" +
-                "        <img src=\"" + qrCodeUrl + "\" alt=\"" + ticket + "\">\n" +
-                "    </div>\n" +
-                "</body>\n" +
-                "</html>";
+        var template = """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>QR Code Page</title>
+                </head>
+                <body>
+                    <p>请使用微信扫描下方二维码：</p>
+                    <div id="qrCodeContainer">
+                        <img src="%s" alt="%s">
+                    </div>
+                    <script type="text/javascript">
+                    
+                        async function fetchQrScanStatus() {
+                            const res = await fetch(`mp-qr-scan-status?ticket=${%s}`, {
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                }
+                            })
+                    
+                            const {status, openid} = await res.json()
+                    
+                            if (openid) {
+                                window.location.href = `%s?openid=${openid}&state=${%s}`
+                            } else {
+                                setTimeout(fetchQrScanStatus, 1000)
+                            }
+                        }
+                    
+                        fetchQrScanStatus()
+                    </script>
+                </body>
+                </html>
+                                """;
+
+        String htmlContent = String.format(template, qrCodeUrl, ticket, ticket, redirectUri, state);
 
         // 返回包含HTML内容的响应
         return Response.ok(htmlContent, MediaType.TEXT_HTML_TYPE).build();
@@ -83,6 +110,8 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
         var expireSeconds = ticketEntity.getExpireSeconds();
         var ticketCreatedAt = ticketEntity.getTicketCreatedAt();
         var status = ticketEntity.getStatus();
+        var openid = ticketEntity.getOpenid();
+        var scannedAt = ticketEntity.getScannedAt();
 
         if ((Long) expireSeconds < System.currentTimeMillis() / 1000 - (Long) ticketCreatedAt) {
             status = "expired";
@@ -92,7 +121,14 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
         }
 
         logger.info(String.format("ticket is %s%n, status is %s%n", ticket, status));
-        return Response.ok(Map.of("ticket", ticket, "expireSeconds", expireSeconds, "ticketCreatedAt", ticketCreatedAt, "status", status)).build();
+        return Response.ok(Map.of(
+                "ticket", ticket,
+                "expireSeconds", expireSeconds,
+                "ticketCreatedAt", ticketCreatedAt,
+                "status", status,
+                "openid", openid,
+                "scannedAt", scannedAt
+        )).build();
     }
 
     @SneakyThrows

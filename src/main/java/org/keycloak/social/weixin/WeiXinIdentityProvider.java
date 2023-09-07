@@ -251,7 +251,12 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                     var ticket = wechatApi.createTmpQrCode(new TicketRequest(2592000, "QR_STR_SCENE", new ActionInfo(new Scene("1")))).ticket;
                     logger.info("ticket = " + ticket);
 
-                    uriBuilder.queryParam("ticket", ticket).queryParam("qr-code-url", "https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=" + ticket);
+                    uriBuilder
+                            .queryParam("ticket", ticket)
+                            .queryParam(OAUTH2_PARAMETER_STATE, request.getState().getEncoded())
+                            .queryParam(OAUTH2_PARAMETER_REDIRECT_URI, request.getRedirectUri())
+                            .queryParam("qr-code-url", "https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=" + ticket)
+                    ;
                 }
             } else {
                 uriBuilder = UriBuilder.fromUri(config.getAuthorizationUrl());
