@@ -1,1 +1,2 @@
 org.keycloak.social.weixin.resources.QrCodeResourceProviderFactory
+org.keycloak.social.weixin.resources.WechatCallbackResourceProviderFactory
