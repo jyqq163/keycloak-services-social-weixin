@@ -9,7 +9,7 @@
     <properties>
         <maven.compiler.target>11</maven.compiler.target>
         <maven.compiler.source>11</maven.compiler.source>
-        <keycloak.version>22.0.1</keycloak.version>
+        <keycloak.version>22.0.3</keycloak.version>
     </properties>
 
     <distributionManagement>
