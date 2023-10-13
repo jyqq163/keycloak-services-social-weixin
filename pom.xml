@@ -1,15 +1,30 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <groupId>org.keycloak</groupId>
     <artifactId>keycloak-services-social-weixin</artifactId>
+    <packaging>pom</packaging>
     <version>0.5.6</version>
+
     <name>Keycloak Services Social WeiXin</name>
-    <description/>
+    <description>Keycloak 微信登录插件，支持 PC 端扫码登录、关注公众号即登录、手机微信等登录方式。</description>
+    <url>https://zhuanlan.zhihu.com/p/652167012</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://www.opensource.org/licenses/mit-license.php</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <properties>
-        <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
         <keycloak.version>22.0.3</keycloak.version>
+        <maven.compiler.target>11</maven.compiler.target>
+        <java.version>11</java.version>
     </properties>
 
     <distributionManagement>
