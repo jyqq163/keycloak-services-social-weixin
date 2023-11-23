@@ -23,6 +23,8 @@
 
 ## 本地开发
 
+需要 JDK 17 或者以上。
+
 ```shell script
 mvn install
 ```
