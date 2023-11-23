@@ -1,6 +1,6 @@
 # keycloak-services-social-weixin
 
-[English](README_en-US.md)
+[🇺🇸 English](README_en-US.md) | **[🇨🇳 简体中文](README.md)**
 
 > Keycloak 的微信登录插件，尝试在 Keycloak 里打通整个微信生态。相关文章：《[对接微信登录的三种方式 - Jeff Tian的文章 - 知乎](https://zhuanlan.zhihu.com/p/659232648)》
 
@@ -20,14 +20,23 @@
 
 * 在生产环境下的keycloak，需要执行kc.sh build 注册provider
 
-
-## 本地开发
+## 👨‍💻 本地开发
 
 需要 JDK 17 或者以上。
 
 ```shell script
 mvn install
 ```
+
+::: tip
+
+如果在本地碰到比如编译出错等问题，最简单的办法就是使用 GitHub CodeSpace，绕过环境问题。
+
+![](./assets/dev-container.jpg)
+
+以上就是我在 CodeSpace 里开发本项目的截图，其开发容器配置在[这里](./.devcontainer/devcontainer.json)。
+
+:::
 
 ## 跑测试
 
@@ -57,7 +66,7 @@ mvn package
 ls target
 ```
 
-### 自动打包 
+### 自动打包
 
 本项目使用 GitHub Actions 自动打包，只需要在 master 分支上提交代码，即可自动打包。但是注意，需要修改 pom.xml 中的版本号，否则打包出来的 jar 包版本号和已经打好的 jar 包版本号冲突，从而不能上传到 GitHub Packages。
 
@@ -90,7 +99,14 @@ docker pull jefftian/keycloak-heroku:latest
 ### 部署到 Heroku
 
 点击这个按钮，可以部署一个包含微信登录的 Keycloak 到你自己的 Heroku：
+
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://dashboard.heroku.com/new?button-url=https%3A%2F%2Fgithub.com%2FJeff-Tian%2Fkeycloak-heroku&template=https%3A%2F%2Fgithub.com%2FJeff-Tian%2Fkeycloak-heroku)
+
+::: warning 注意
+Heroku 不再提供免费的 Dyno，部署到 Heroku 可能会产生费用。
+
+![](./assets/heroku-bill.png)
+:::
 
 ### 部署到 Okteto
 
@@ -166,3 +182,8 @@ https://keycloak.jiwai.win/realms/master/broker/weixin/endpoint?code=011er8000zw
 #### 通过 code 换取 access_token
 
 #### 通过 access_token 换取用户信息
+
+## 🧧 [其他 Keycloak 社交登录插件](https://afdian.net/album/1270bba089c511eebb825254001e7c00)
+
+- [钉钉登录](https://github.com/Jeff-Tian/keycloak-services-social-dingding)
+- [企业微信](https://github.com/Jeff-Tian/keycloak-services-social-wechatwork)
