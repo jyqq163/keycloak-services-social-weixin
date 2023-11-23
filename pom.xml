@@ -4,7 +4,7 @@
 
     <groupId>org.keycloak</groupId>
     <artifactId>keycloak-services-social-weixin</artifactId>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
     <version>0.5.6</version>
 
     <name>Keycloak Services Social WeiXin</name>
