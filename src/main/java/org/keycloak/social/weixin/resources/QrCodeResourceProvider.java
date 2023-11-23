@@ -171,6 +171,6 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
 
         this.ticketStatusProvider.saveTicketStatus(ticketSaved);
 
-        return Response.ok(Map.of("status", "scanned")).build();
+        return Response.ok("success").build();
     }
 }
