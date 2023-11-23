@@ -2,10 +2,10 @@
 
 [English](README_en-US.md)
 
-> Keycloak 的微信登录插件，尝试在 Keycloak 里打通整个微信生态。
+> Keycloak 的微信登录插件，尝试在 Keycloak 里打通整个微信生态。相关文章：《[对接微信登录的三种方式 - Jeff Tian的文章 - 知乎](https://zhuanlan.zhihu.com/p/659232648)》
 
 ![Java CI with Maven](https://github.com/Jeff-Tian/keycloak-services-social-weixin/workflows/Java%20CI%20with%20Maven/badge.svg)
-![Maven Package](https://github.com/Jeff-Tian/keycloak-services-social-weixin/workflows/Maven%20Package/badge.svg)
+[![Maven Package](https://github.com/Jeff-Tian/keycloak-services-social-weixin/workflows/Maven%20Package/badge.svg)](https://github.com/Jeff-Tian/keycloak-services-social-weixin/packages)
 
 ## 在线体验
 
@@ -13,10 +13,13 @@
 
 ## 如何使用
 
-To install the social weixin one has to:
+本项目是一个 Keycloak 的插件，所以你需要先有一个 Keycloak 实例，然后把本项目打包成 jar 包，放到 Keycloak 的 providers 目录下，然后重启 Keycloak 即可。即：
 
 * Add the jar to the Keycloak server:
     * `cp target/keycloak-services-social-weixin-*.jar _KEYCLOAK_HOME_/providers/`
+
+* 在生产环境下的keycloak，需要执行kc.sh build 注册provider
+
 
 ## 本地开发
 
@@ -37,12 +40,28 @@ mvn clean test
 - 支持 quay.io/keycloak 21.1 的版本：https://github.com/Jeff-Tian/keycloak-services-social-weixin/tree/dev-keycloak-21
 - 支持 quay.io/keycloak 22 的版本： https://github.com/Jeff-Tian/keycloak-services-social-weixin/tree/dev-keycloak-22
 
-## 打包
+## 获取 jar 包
+
+### 直接下载
+
+你可以从 https://github.com/Jeff-Tian/keycloak-services-social-weixin/packages 获取已经打好的 jar 包，可以省去打包的步骤。
+
+### 手动打包
+
+如果需要自己手动打包，可以在本地命令行执行：
 
 ```shell
 mvn package
 ls target
 ```
+
+### 自动打包 
+
+本项目使用 GitHub Actions 自动打包，只需要在 master 分支上提交代码，即可自动打包。但是注意，需要修改 pom.xml 中的版本号，否则打包出来的 jar 包版本号和已经打好的 jar 包版本号冲突，从而不能上传到 GitHub Packages。
+
+## 发版
+
+本项目使用 GitHub Actions 自动发版，只需要在 master 分支上打一个 tag，然后在 GitHub 上发布一个 release 即可。
 
 ## 配置截图
 
@@ -112,11 +131,21 @@ docker pull jefftian/keycloak-heroku:latest
 
 ## Star History
 
+感谢大家的支持！
+
 [![Star History Chart](https://api.star-history.com/svg?repos=Jeff-Tian/keycloak-services-social-weixin&type=Date)](https://star-history.com/#Jeff-Tian/keycloak-services-social-weixin&Date)
+
+## 致谢
+
+- 感谢 [jyqq163/keycloak-services-social-weixin](https://github.com/jyqq163/keycloak-services-social-weixin) 提供的基础代码，本仓库从该仓库 fork 而来。
+- 感谢 [hhhnnn](https://www.zhihu.com/people/hhhnnn-78) 提供的企业公众号，没有该服务号我没法调通手机端。
+- 感谢[各位](https://github.com/Jeff-Tian/keycloak-services-social-weixin/graphs/contributors)发的 pull request 和 issue，让本项目越来越好！
 
 ## 原理
 
-### 开放平台微信登录
+其实任何一个 OAuth2/OIDC 的登录插件都是一样的，都是通过一个授权链接，然后通过 code 换取 access_token，再通过 access_token 换取用户信息。详见《[三步开发社交账号登录（以钉钉登录举例） - Jeff Tian的文章 - 知乎](https://zhuanlan.zhihu.com/p/666423994) 》
+
+### 以开放平台微信登录举例
 
 #### 先构建授权链接
 
@@ -131,3 +160,7 @@ https://open.weixin.qq.com/connect/qrconnect?scope=snsapi_login&state=d3Yvfou3pd
 ```
 https://keycloak.jiwai.win/realms/master/broker/weixin/endpoint?code=011er8000zwPzQ1Fvw200DTBCP1er80K&state=d3Yvfou3pdgp-UNVZ-i7DTDEbv4rZTWx6Wh7lmxzyvk.98VO-haMdj4.c0L0bnybTEatKpqInU02nQ
 ```
+
+#### 通过 code 换取 access_token
+
+#### 通过 access_token 换取用户信息
