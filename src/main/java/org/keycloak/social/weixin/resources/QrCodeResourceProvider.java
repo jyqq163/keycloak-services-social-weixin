@@ -177,6 +177,7 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
     @SneakyThrows
     @POST
     @Path("message")
+    @Consumes(MediaType.APPLICATION_XML)
     @Produces(MediaType.APPLICATION_JSON)
     public Response message(String xmlData) {
         logger.info("接收到微信服务器发来的事件： " + xmlData);
@@ -213,7 +214,6 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
     @SneakyThrows
     @GET
     @Path("message")
-    @Consumes(MediaType.APPLICATION_XML)
     @Produces(MediaType.APPLICATION_JSON)
     public Response message(@QueryParam("echostr") String echostr, String xmlData) {
         logger.info("接收到微信服务器发来的事件： " + xmlData);
