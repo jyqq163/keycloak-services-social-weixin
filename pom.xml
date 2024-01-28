@@ -5,7 +5,7 @@
     <groupId>org.keycloak</groupId>
     <artifactId>keycloak-services-social-weixin</artifactId>
     <packaging>jar</packaging>
-    <version>0.5.8</version>
+    <version>0.5.9</version>
 
     <name>Keycloak Services Social WeiXin</name>
     <description>Keycloak 微信登录插件，支持 PC 端扫码登录、关注公众号即登录、手机微信等登录方式。</description>
