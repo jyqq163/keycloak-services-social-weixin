@@ -9,7 +9,7 @@
 
 ## 在线体验
 
-- [点击我并选择使用微信登录](https://keycloak.jiwai.win/auth/realms/UniHeart/protocol/openid-connect/auth?response_type=code&redirect_uri=http%3A%2F%2Fsso.jiwai.win%2Fkeycloak%2Flogin&client_id=UniHeart-Client-Local-3000)
+- [点击我，右上角点击登录，然后选择使用微信登录](https://keycloak.jiwai.win/realms/Brickverse/account/#/ )
 
 ## 如何使用
 

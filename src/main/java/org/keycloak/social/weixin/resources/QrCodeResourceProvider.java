@@ -173,4 +173,52 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
 
         return Response.ok("success").build();
     }
+
+    @SneakyThrows
+    @POST
+    @Path("message")
+    @Consumes(MediaType.APPLICATION_XML)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response message(String xmlData) {
+        logger.info("接收到微信服务器发来的事件： " + xmlData);
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document document = builder.parse(new InputSource(new StringReader(xmlData)));
+        var root = document.getDocumentElement();
+        var xmlEvent = root.getElementsByTagName("Event").item(0).getTextContent();
+
+        if (!Objects.equals(xmlEvent, "SCAN")) {
+            logger.info(String.format("ignoring not scanning event: {%s} != {%s}", xmlEvent, "SCAN"));
+            return Response.ok(Map.of("status", "not_scanned")).build();
+        }
+
+        var xmlTicket = root.getElementsByTagName("Ticket").item(0).getTextContent();
+        var xmlFromUserName = root.getElementsByTagName("FromUserName").item(0).getTextContent();
+
+        var ticketSaved = this.ticketStatusProvider.getTicketStatus(xmlTicket);
+        if (ticketSaved == null) {
+            logger.warn(String.format("ticket is not found, {%s}", xmlTicket));
+            return Response.ok(Map.of("status", "not_scanned")).build();
+        }
+
+        ticketSaved.setStatus("scanned");
+        ticketSaved.setScannedAt(System.currentTimeMillis() / 1000L);
+        ticketSaved.setOpenid(xmlFromUserName);
+
+        this.ticketStatusProvider.saveTicketStatus(ticketSaved);
+
+        return Response.ok("success").build();
+    }
+
+    @SneakyThrows
+    @GET
+    @Path("message")
+    @Consumes(MediaType.APPLICATION_XML)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response message(@QueryParam("echostr") String echostr, String xmlData) {
+        logger.info("接收到微信服务器发来的事件： " + xmlData);
+
+        return Response.ok(echostr).build();
+    }
 }
