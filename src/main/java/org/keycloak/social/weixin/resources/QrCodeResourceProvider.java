@@ -188,7 +188,7 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
         var root = document.getDocumentElement();
         var xmlEvent = root.getElementsByTagName("Event").item(0).getTextContent();
 
-        if (!Objects.equals(xmlEvent, "SCAN")) {
+        if (!Objects.equals(xmlEvent, "SCAN") && !Objects.equals(xmlEvent, "subscribe")) {
             logger.info(String.format("ignoring not scanning event: {%s} != {%s}", xmlEvent, "SCAN"));
 
             return Response.ok("success").build();
