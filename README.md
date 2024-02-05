@@ -147,11 +147,14 @@ Heroku 不再提供免费的 Dyno，部署到 Heroku 可能会产生费用。
 * 20230827
     - 新增对微信开放平台的支持。 [【继续更新】尝试在 Keycloak 里打通整个微信生态 - Jeff Tian的文章 - 知乎](https://zhuanlan.zhihu.com/p/652566471)
 
+* 20240129（[0.5.13](https://github.com/Jeff-Tian/keycloak-services-social-weixin/releases/tag/0.5.13)）
+    - 优化关注公众号即登录方案的微信后台配置。 详见《[基于 Keycloak 的关注微信公众号即登录方案再次升级：有意思的成长 - Jeff Tian的文章 - 知乎](https://zhuanlan.zhihu.com/p/680356153)》
+
 ## Star History
 
 感谢大家的支持！
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Jeff-Tian/keycloak-services-social-weixin&type=Date)](https://star-history.com/#Jeff-Tian/keycloak-services-social-weixin&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=Jeff-Tian/keycloak-services-social-weixin,jyqq163/keycloak-services-social-weixin&type=Date)](https://star-history.com/#Jeff-Tian/keycloak-services-social-weixin&jyqq163/keycloak-services-social-weixin&Date)
 
 ## 致谢
 
