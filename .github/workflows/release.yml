@@ -79,12 +79,19 @@ jobs:
           draft: false
           prerelease: false
 
+      - name: Find asset path
+        id: find
+        run: echo "::set-output name=path::$(echo ./keycloak-services-social-weixin-*.jar)"
+
+      - name: Extract file name
+        id: extract
+        run: echo "::set-output name=name::$(basename ${{ steps.find.outputs.path }})"
       # 将生成的 artifacts 上传到 release 的附件中
       - name: Upload release assets
         if: steps.check_version.outputs.version_changed == 'true'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/java-artifacts.zip  # 使用先前下载的构件路径
-          asset_name: java-artifacts-${{ steps.get_current_version.outputs.current_version }}.zip
-          asset_content_type: application/zip
+          asset_path: ${{ steps.find.outputs.path }}
+          asset_name: ${{ steps.extract.outputs.name }}
+          asset_content_type: application/java-archive
