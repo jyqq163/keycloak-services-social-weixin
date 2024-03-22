@@ -27,7 +27,7 @@ jobs:
 
       # 上传生成的文件作为 Artifact
     - name: Upload Maven package
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: java-artifacts
         path: target/
