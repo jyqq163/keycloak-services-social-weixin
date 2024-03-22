@@ -47,15 +47,16 @@ jobs:
             echo "::set-output name=version_changed::false"
           fi
 
-      - name: Create tag
-        id: create_tag
-        if: steps.check_version.outputs.version_changed == 'true'
-        run: git tag ${{ steps.get_current_version.outputs.current_version }} -m "Release ${{ steps.get_current_version.outputs.current_version }}"
-
-      - name: Push tag
+      - name: Create and Push Tag
         id: push_tag
         if: steps.check_version.outputs.version_changed == 'true'
-        run: git push origin ${{ steps.get_current_version.outputs.current_version }}
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag -a "${{ steps.get_current_version.outputs.current_version }}" -m "Generated tag from GitHub Actions"
+          git push origin "${{ steps.get_current_version.outputs.current_version }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create release
         id: create_release
