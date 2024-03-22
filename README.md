@@ -90,7 +90,7 @@ ls target
 
 ## 发版
 
-本项目使用 GitHub Actions 自动发版，只需要在 master 分支上打一个 tag，然后在 GitHub 上发布一个 release 即可。
+本项目使用 GitHub Actions 自动发版，只需要在 master 分支上打一个 tag，然后在 GitHub 上发布一个 release 即可。不过，一般来说，也不需要手动打 tag。每次提交代码到 master 分支，GitHub Actions 都会检测是否有版本号的变化。如果版本号发生了变化，就会自动将该版本号做为新的 tag，并基于此来发布一个 release。详见： [这个 yml 文件](.github/workflows/release.yml) 。
 
 ## 版本更新
 
