@@ -55,6 +55,11 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
     public Response mpQrUrl(@QueryParam("ticket") String ticket, @QueryParam("qr-code-url") String qrCodeUrl, @QueryParam("state") String state, @QueryParam(OAUTH2_PARAMETER_REDIRECT_URI) String redirectUri) {
         logger.info("展示一个 HTML 页面，该页面使用 React 展示一个组件，它调用一个后端 API，得到一个带参二维码 URL，并将该 URL 作为 img 的 src 属性值");
 
+        var host = session.getContext().getUri().getBaseUri().toString();
+        var realmName = session.getContext().getRealm().getName();
+
+        logger.info(String.format("host is %s, realmName is %s", host, realmName));
+
         var template = """
                 <!DOCTYPE html>
                 <html>
@@ -65,9 +70,11 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
                     <p>请使用微信扫描下方二维码：</p>
                     <div id="qrCodeContainer">
                         <img src="%s" alt="%s">
+                
+                        <p></p>
+                        <p><button id="login-by-username-password" onclick="keycloak.login({ idpHint:'username' });" type="button">使用密码登录</button></p>
                     </div>
                     <script type="text/javascript">
-                
                         async function fetchQrScanStatus() {
                             const res = await fetch(`mp-qr-scan-status?ticket=%s`, {
                                 headers: {
@@ -88,11 +95,28 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
                     </script>
                 
                     <script src="/js/keycloak.js" type="text/javascript"></script>
+                    <script type="text/javascript">
+                        const keycloak = new Keycloak({
+                            url: '%s',
+                            realm: '%s',
+                            clientId: 'account-console'
+                        });
+                
+                        keycloak.init({
+                            onLoad: 'login-required'
+                        }).success(authenticated => {
+                            if (authenticated) {
+                                console.log('authenticated');
+                            } else {
+                                console.log('not authenticated');
+                            }
+                        });
+                    </script>
                 </body>
                 </html>
                 """;
 
-        String htmlContent = String.format(template, qrCodeUrl, ticket, ticket, redirectUri, state);
+        String htmlContent = String.format(template, qrCodeUrl, ticket, ticket, redirectUri, state, host, realmName);
 
         // 返回包含HTML内容的响应
         return Response.ok(htmlContent, MediaType.TEXT_HTML_TYPE).build();
