@@ -2,10 +2,12 @@ name: Release Workflow
 
 on:
   workflow_run:
-    workflows: ["Java CI with Maven"]
-    branches: [master]
+    workflows: [ "Java CI with Maven" ]
+    branches: [ master ]
     types:
       - completed
+    concurrency:
+      group: 'artifact-download'
 
 
 jobs:

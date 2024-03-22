@@ -4,13 +4,15 @@
 name: Maven Package
 
 on:
-  release:
-    types: [ released ]
+#  release:
+#    types: [ released ]
   workflow_run:
     workflows: [ "Java CI with Maven", "Release Workflow" ]
     branches: [ master ]
     types:
       - completed
+    concurrency:
+      group: 'artifact-download'
 
 jobs:
   build:
@@ -37,7 +39,7 @@ jobs:
         run: ｜
           mv ${{ github.workspace }}/java-artifacts/* $GITHUB_WORKSPACE
           pwd
-          ls 
+          ls
           ls -l $GITHUB_WORKSPACE
           mvn deploy -s $GITHUB_WORKSPACE/settings.xml
         env:
