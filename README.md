@@ -38,6 +38,14 @@ mvn install
 
 :::
 
+### 如何调试？
+
+我一般都是通过添加日志，然后重启 Keycloak 服务，然后查看日志来排查问题。
+
+原因是这并不是一个独立的程序，无法通过 IDE 直接运行或者调试（找不到 Main class）。它是嵌入在 Keycloak 里，通过 Keycloak 的 SPI 机制来运行的。我一般都是通过 Docker 方式启动 Keycloak 或者直接将该包加载到服务器上的 Keycloak 实例，然后观察本地或者服务器端的日志输出来排查问题的。
+
+如果有人知道如何在 IDE 中本地调试 Keycloak 的 SPI 插件，欢迎提供帮助！
+
 ## 跑测试
 
 ```shell script
@@ -45,6 +53,16 @@ mvn clean test
 ```
 
 ## Maven 包
+
+[![](https://go.inversify.cn/api/dynamicimage?url=https://resume.jijiyy.me/zh-CN/jeff-tian/linked-in&width=332&height=242&version=v2)](https://www.linkedin.com/in/jeff~tian/)
+
+我本是一名 JavaScript 程序员，使用 NodeJs 两年之后，就在 npm 上发布了 20 多个包。当开始折腾 Java 之后，也想在 Maven Central 中发布包，但折腾了很久之后，我放弃了——没想到这么复杂！发布到 Maven Central 的好处是可以方便其他项目在 pom.xml 中引用此包，所以还是有价值的，如果有谁知道怎么发布到 Maven Central，**请提供帮助**！
+
+> 你也可以直接 fork 本仓库，并将它发布到 Maven Central，善莫大焉。
+
+目前我在 GitHub 上发布了，在 GitHub 发布后，如果要在 pom.xml 中引用，不仅需要在 pom.xml 中配置 GitHub Packages 的仓库地址，还需要一个访问令牌，有一些麻烦。
+
+当然，你也可以直接下载 jar 包：
 
 - 支持 jboss/keycloak 16，你可以使用我打的包：https://github.com/Jeff-Tian/keycloak-services-social-weixin/packages/225091
 - 支持 quay.io/keycloak 18.0.2 的代码版本：https://github.com/Jeff-Tian/keycloak-services-social-weixin/tree/8069d7b32cb225742d7566d61e7ca0d0e0e389a5
@@ -73,6 +91,14 @@ ls target
 ## 发版
 
 本项目使用 GitHub Actions 自动发版，只需要在 master 分支上打一个 tag，然后在 GitHub 上发布一个 release 即可。
+
+## 版本更新
+
+当需要更新本项目的版本时，需要修改 pom.xml 中的版本号。或者使用如下命令，比如将版本号改为 0.5.14：
+
+```shell
+mvn versions:set -DnewVersion=0.5.14
+```
 
 ## 配置截图
 
