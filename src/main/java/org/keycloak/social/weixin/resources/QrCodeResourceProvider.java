@@ -101,16 +101,6 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
                             realm: '%s',
                             clientId: 'account-console'
                         });
-                
-                        keycloak.init({
-                            onLoad: 'login-required'
-                        }).success(authenticated => {
-                            if (authenticated) {
-                                console.log('authenticated');
-                            } else {
-                                console.log('not authenticated');
-                            }
-                        });
                     </script>
                 </body>
                 </html>
