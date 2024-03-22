@@ -6,8 +6,6 @@ on:
     branches: [ master ]
     types:
       - completed
-    concurrency:
-      group: 'artifact-download'
 
 
 jobs:
