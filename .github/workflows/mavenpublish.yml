@@ -25,7 +25,7 @@ jobs:
         with:
           name: java-artifacts
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.conclusion }}
+          run-id: ${{ github.event.workflow_run.id }}
 
       - name: Set up JDK 18
         uses: actions/setup-java@v1
