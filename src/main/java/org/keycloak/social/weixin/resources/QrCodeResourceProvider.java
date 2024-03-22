@@ -101,6 +101,7 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
                             realm: '%s',
                             clientId: 'account-console'
                         });
+                        keycloak.init();
                     </script>
                 </body>
                 </html>
