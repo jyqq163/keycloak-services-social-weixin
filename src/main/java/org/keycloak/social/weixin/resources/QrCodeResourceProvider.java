@@ -67,28 +67,30 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
                         <img src="%s" alt="%s">
                     </div>
                     <script type="text/javascript">
-                    
+                
                         async function fetchQrScanStatus() {
                             const res = await fetch(`mp-qr-scan-status?ticket=%s`, {
                                 headers: {
                                     'Content-Type': 'application/json'
                                 }
                             })
-                    
+                
                             const {status, openid} = await res.json()
-                    
+                
                             if (openid) {
                                 window.location.href = `%s?openid=${openid}&state=%s`
                             } else {
                                 setTimeout(fetchQrScanStatus, 1000)
                             }
                         }
-                    
+                
                         fetchQrScanStatus()
                     </script>
+                
+                    <script src="/js/keycloak.js" type="text/javascript"></script>
                 </body>
                 </html>
-                                """;
+                """;
 
         String htmlContent = String.format(template, qrCodeUrl, ticket, ticket, redirectUri, state);
 
