@@ -57,6 +57,7 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
 
         var host = session.getContext().getUri().getBaseUri().toString();
         var realmName = session.getContext().getRealm().getName();
+        var accountRedirectUri = host + "/realms/" + realmName + "/account";
 
         logger.info(String.format("host is %s, realmName is %s", host, realmName));
 
@@ -72,7 +73,7 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
                         <img src="%s" alt="%s">
                 
                         <p></p>
-                        <p><button id="login-by-username-password" onclick="keycloak.login({ idpHint:'username' });" type="button">使用密码登录</button></p>
+                        <p><button id="login-by-username-password" onclick="keycloak.login({ idpHint: 'username', redirectUri: '%s' });" type="button">使用密码登录</button></p>
                     </div>
                     <script type="text/javascript">
                         async function fetchQrScanStatus() {
@@ -99,15 +100,16 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
                         const keycloak = new Keycloak({
                             url: '%s',
                             realm: '%s',
-                            clientId: 'account-console'
+                            clientId: 'account-console',
+                            redirectUri: '%s'
                         });
-                        keycloak.init();
+                        keycloak.init({onLoad: 'check-sso', pkceMethod: 'S256', promiseType: 'native'});
                     </script>
                 </body>
                 </html>
                 """;
 
-        String htmlContent = String.format(template, qrCodeUrl, ticket, ticket, redirectUri, state, host, realmName);
+        String htmlContent = String.format(template, qrCodeUrl, ticket, accountRedirectUri, ticket, redirectUri, state, host, realmName, accountRedirectUri);
 
         // 返回包含HTML内容的响应
         return Response.ok(htmlContent, MediaType.TEXT_HTML_TYPE).build();
