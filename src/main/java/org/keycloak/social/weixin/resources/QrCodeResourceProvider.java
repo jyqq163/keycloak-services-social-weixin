@@ -68,7 +68,7 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
                     <title>QR Code Page</title>
                 </head>
                 <body>
-                    <p>请使用微信扫描下方二维码：</p>
+                    <p>请使用微信扫描下方二维码：<span style="float: right; color: red;"><a href="https://taro.jefftian.dev/pages/subpages/github/readme?name=keycloak-services-social-weixin" target="_blank" rel="noopener noreferrer">关于此插件</a></span></p>
                     <div id="qrCodeContainer">
                         <img src="%s" alt="%s">
                 
