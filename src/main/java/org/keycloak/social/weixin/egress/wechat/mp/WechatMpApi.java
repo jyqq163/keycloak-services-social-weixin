@@ -42,8 +42,18 @@ public class WechatMpApi {
     public TicketResponse createTmpQrCode(TicketRequest ticketRequest) {
         logger.info(String.format("createTmpQrCode by %s%n", ticketRequest));
 
-        var res = SimpleHttp.doPost("https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token=" + this.getAccessToken(appId, appSecret).access_token,
-                session).json(ticketRequest).asJson(TicketResponse.class);
+        AccessTokenResponse tokenResponse = this.getAccessToken(appId, appSecret);
+        if (tokenResponse == null || tokenResponse.access_token == null) {
+            logger.error("Failed to get access token");
+            throw new RuntimeException("Failed to get WeChat access token");
+        }
+
+        String url = String.format("https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token=%s", 
+                tokenResponse.access_token);
+        
+        var res = SimpleHttp.doPost(url, session)
+                .json(ticketRequest)
+                .asJson(TicketResponse.class);
 
         logger.info(String.format("res is %s%n", res));
 

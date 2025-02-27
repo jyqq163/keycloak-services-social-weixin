@@ -1,10 +1,8 @@
 package org.keycloak.social.weixin;
 
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.Response;
+import java.util.Map;
+import java.util.Objects;
+
 import org.keycloak.OAuth2Constants;
 import org.keycloak.broker.oidc.AbstractOAuth2IdentityProvider;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
@@ -20,10 +18,14 @@ import org.keycloak.services.messages.Messages;
 import org.keycloak.social.weixin.helpers.UserAgentHelper;
 import org.keycloak.social.weixin.helpers.WMPHelper;
 
-import java.util.Map;
-import java.util.Objects;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.Response;
 
 public class Endpoint extends WeiXinIdentityProvider {
+
     private final WeiXinIdentityProvider weiXinIdentityProvider;
     protected IdentityProvider.AuthenticationCallback callback;
     protected RealmModel realm;
@@ -46,7 +48,7 @@ public class Endpoint extends WeiXinIdentityProvider {
 
     @GET
     public Response authResponse(@QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_STATE) String state,
-                                 @QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_CODE) String authorizationCode, @QueryParam(OAuth2Constants.ERROR) String error, @QueryParam(OAuth2Constants.SCOPE_OPENID) String openid, @QueryParam("clientId") String clientId, @QueryParam("tabId") String tabId) {
+            @QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_CODE) String authorizationCode, @QueryParam(OAuth2Constants.ERROR) String error, @QueryParam(OAuth2Constants.SCOPE_OPENID) String openid, @QueryParam("client_data") String clientData, @QueryParam("clientId") String clientId, @QueryParam("tabId") String tabId) {
         AbstractOAuth2IdentityProvider.logger.info(String.format("OAUTH2_PARAMETER_CODE = %s, %s, %s, %s, %s", authorizationCode, error, openid, clientId, tabId));
         var wechatLoginType = WechatLoginType.FROM_PC_QR_CODE_SCANNING;
 
@@ -90,7 +92,7 @@ public class Endpoint extends WeiXinIdentityProvider {
                 AbstractOAuth2IdentityProvider.logger.info("response from auth code = " + response + ", " + accessTokenResponse);
                 federatedIdentity = weiXinIdentityProvider.getFederatedIdentity(response, wechatLoginType, accessTokenResponse);
 
-                setFederatedIdentity(Objects.requireNonNullElse(state, WMPHelper.createStateForWMP(clientId, tabId)), federatedIdentity, response);
+                setFederatedIdentity(Objects.requireNonNullElse(state, WMPHelper.createStateForWMP(clientId, tabId, clientData)), federatedIdentity, response);
 
                 return authenticated(federatedIdentity);
             }
@@ -106,8 +108,8 @@ public class Endpoint extends WeiXinIdentityProvider {
     }
 
     private Response authenticated(BrokeredIdentityContext federatedIdentity) {
-        var weiXinIdentityBrokerService =
-                new WeiXinIdentityBrokerService(realm);
+        var weiXinIdentityBrokerService
+                = new WeiXinIdentityBrokerService(realm);
         weiXinIdentityBrokerService.init(weiXinIdentityProvider.session, clientConnection, event, request);
 
         return weiXinIdentityBrokerService.authenticated(federatedIdentity);
@@ -115,11 +117,12 @@ public class Endpoint extends WeiXinIdentityProvider {
 
     public void setFederatedIdentity(@QueryParam(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_STATE) String state, BrokeredIdentityContext federatedIdentity, String accessToken) {
         if (weiXinIdentityProvider.getConfig().isStoreToken()) {
-            if (federatedIdentity.getToken() == null)
+            if (federatedIdentity.getToken() == null) {
                 federatedIdentity.setToken(accessToken);
+            }
         }
 
-        federatedIdentity.setIdpConfig(weiXinIdentityProvider.getConfig());
+        //federatedIdentity.setIdpConfig(weiXinIdentityProvider.getConfig());
         federatedIdentity.setIdp(weiXinIdentityProvider);
         federatedIdentity.setContextData(Map.of("state", Objects.requireNonNullElse(state, "wmp")));
     }
@@ -133,19 +136,19 @@ public class Endpoint extends WeiXinIdentityProvider {
             AbstractOAuth2IdentityProvider.logger.info(String.format("from wechat browser, posting to %s for fetching token, with mobileMpClientId = %s, mobileMpClientSecret = %s", weiXinIdentityProvider.getConfig().getTokenUrl(), mobileMpClientId, mobileMpClientSecret));
 
             return new SimpleHttp[]{SimpleHttp.doPost(weiXinIdentityProvider.getConfig().getTokenUrl(), weiXinIdentityProvider.session)
-                    .param(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_CODE, authorizationCode)
-                    .param(WeiXinIdentityProvider.OAUTH2_PARAMETER_CLIENT_ID, mobileMpClientId)
-                    .param(WeiXinIdentityProvider.OAUTH2_PARAMETER_CLIENT_SECRET, mobileMpClientSecret)
-                    .param(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_REDIRECT_URI, weiXinIdentityProvider.getConfig().getConfig().get(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_REDIRECT_URI))
-                    .param(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_GRANT_TYPE, AbstractOAuth2IdentityProvider.OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE), null};
+                .param(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_CODE, authorizationCode)
+                .param(WeiXinIdentityProvider.OAUTH2_PARAMETER_CLIENT_ID, mobileMpClientId)
+                .param(WeiXinIdentityProvider.OAUTH2_PARAMETER_CLIENT_SECRET, mobileMpClientSecret)
+                .param(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_REDIRECT_URI, weiXinIdentityProvider.getConfig().getConfig().get(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_REDIRECT_URI))
+                .param(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_GRANT_TYPE, AbstractOAuth2IdentityProvider.OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE), null};
         }
 
         if (WechatLoginType.FROM_WECHAT_MINI_PROGRAM.equals(wechatLoginType)) {
             AbstractOAuth2IdentityProvider.logger.info(String.format("from wechat mini program, posting to %s", WeiXinIdentityProvider.WMP_AUTH_URL));
             var wechatSession = SimpleHttp.doGet(WeiXinIdentityProvider.WMP_AUTH_URL, weiXinIdentityProvider.session).param(WeiXinIdentityProvider.OAUTH2_PARAMETER_CLIENT_ID, weiXinIdentityProvider.getConfig().getConfig().get(WeiXinIdentityProvider.WMP_APP_ID)).param(WeiXinIdentityProvider.OAUTH2_PARAMETER_CLIENT_SECRET, weiXinIdentityProvider.getConfig().getConfig().get(WeiXinIdentityProvider.WMP_APP_SECRET)).param("js_code", authorizationCode).param(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_GRANT_TYPE, AbstractOAuth2IdentityProvider.OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE);
 
-            var tokenRes = SimpleHttp.doGet(String.format("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential" +
-                            "&appid=%s&secret=%s", weiXinIdentityProvider.getConfig().getConfig().get(WeiXinIdentityProvider.WMP_APP_ID), weiXinIdentityProvider.getConfig().getConfig().get(WeiXinIdentityProvider.WMP_APP_SECRET)),
+            var tokenRes = SimpleHttp.doGet(String.format("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential"
+                    + "&appid=%s&secret=%s", weiXinIdentityProvider.getConfig().getConfig().get(WeiXinIdentityProvider.WMP_APP_ID), weiXinIdentityProvider.getConfig().getConfig().get(WeiXinIdentityProvider.WMP_APP_SECRET)),
                     weiXinIdentityProvider.session);
 
             return new SimpleHttp[]{wechatSession, tokenRes};
@@ -155,16 +158,16 @@ public class Endpoint extends WeiXinIdentityProvider {
 
         if (isOpenClientEnabled.equals("true")) {
             return new SimpleHttp[]{SimpleHttp.doPost(weiXinIdentityProvider.getConfig().getTokenUrl(), weiXinIdentityProvider.session).param(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_CODE, authorizationCode)
-                    .param(WeiXinIdentityProvider.OAUTH2_PARAMETER_CLIENT_ID, weiXinIdentityProvider.getConfig().getConfig().get(WeiXinIdentityProvider.OPEN_CLIENT_ID))
-                    .param(WeiXinIdentityProvider.OAUTH2_PARAMETER_CLIENT_SECRET, weiXinIdentityProvider.getConfig().getConfig().get(WeiXinIdentityProvider.OPEN_CLIENT_SECRET))
-                    .param(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_REDIRECT_URI, weiXinIdentityProvider.getConfig().getConfig().get(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_REDIRECT_URI))
-                    .param(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_GRANT_TYPE, AbstractOAuth2IdentityProvider.OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE), null};
+                .param(WeiXinIdentityProvider.OAUTH2_PARAMETER_CLIENT_ID, weiXinIdentityProvider.getConfig().getConfig().get(WeiXinIdentityProvider.OPEN_CLIENT_ID))
+                .param(WeiXinIdentityProvider.OAUTH2_PARAMETER_CLIENT_SECRET, weiXinIdentityProvider.getConfig().getConfig().get(WeiXinIdentityProvider.OPEN_CLIENT_SECRET))
+                .param(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_REDIRECT_URI, weiXinIdentityProvider.getConfig().getConfig().get(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_REDIRECT_URI))
+                .param(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_GRANT_TYPE, AbstractOAuth2IdentityProvider.OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE), null};
         }
 
         return new SimpleHttp[]{SimpleHttp.doPost(weiXinIdentityProvider.getConfig().getTokenUrl(), weiXinIdentityProvider.session).param(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_CODE, authorizationCode)
-                .param(WeiXinIdentityProvider.OAUTH2_PARAMETER_CLIENT_ID, weiXinIdentityProvider.getConfig().getClientId())
-                .param(WeiXinIdentityProvider.OAUTH2_PARAMETER_CLIENT_SECRET, weiXinIdentityProvider.getConfig().getClientSecret())
-                .param(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_REDIRECT_URI, weiXinIdentityProvider.getConfig().getConfig().get(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_REDIRECT_URI))
-                .param(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_GRANT_TYPE, AbstractOAuth2IdentityProvider.OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE), null};
+            .param(WeiXinIdentityProvider.OAUTH2_PARAMETER_CLIENT_ID, weiXinIdentityProvider.getConfig().getClientId())
+            .param(WeiXinIdentityProvider.OAUTH2_PARAMETER_CLIENT_SECRET, weiXinIdentityProvider.getConfig().getClientSecret())
+            .param(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_REDIRECT_URI, weiXinIdentityProvider.getConfig().getConfig().get(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_REDIRECT_URI))
+            .param(AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_GRANT_TYPE, AbstractOAuth2IdentityProvider.OAUTH2_GRANT_TYPE_AUTHORIZATION_CODE), null};
     }
 }

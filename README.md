@@ -2,6 +2,7 @@
 
 [🇺🇸 English](README_en-US.md) | **[🇨🇳 简体中文](README.md)**
 
+> 感谢原作者Jeff-Tian的开源项目，本项目是在原项目的基础上进行了一些修改，主要是适配了quay.io/keycloak 26.0版本。
 > Keycloak 的微信登录插件，尝试在 Keycloak 里打通整个微信生态。相关文章：《[对接微信登录的三种方式 - Jeff Tian的文章 - 知乎](https://zhuanlan.zhihu.com/p/659232648)》
 
 ![Java CI with Maven](https://github.com/Jeff-Tian/keycloak-services-social-weixin/workflows/Java%20CI%20with%20Maven/badge.svg)
@@ -68,6 +69,8 @@ mvn clean test
 - 支持 quay.io/keycloak 18.0.2 的代码版本：https://github.com/Jeff-Tian/keycloak-services-social-weixin/tree/8069d7b32cb225742d7566d61e7ca0d0e0e389a5
 - 支持 quay.io/keycloak 21.1 的版本：https://github.com/Jeff-Tian/keycloak-services-social-weixin/tree/dev-keycloak-21
 - 支持 quay.io/keycloak 22 的版本： https://github.com/Jeff-Tian/keycloak-services-social-weixin/tree/dev-keycloak-22
+- 支持 quay.io/keycloak 26 的版本： 
+
 
 ## 获取 jar 包
 
@@ -115,9 +118,12 @@ Client ID 和 公众号 App Id；Client Secret 和 公众号 App Secret 都可�
 ## Docker 镜像
 
 我也打包了一个包含[微信 idp 的 keycloak server docker 镜像](https://hub.docker.com/repository/docker/jefftian/keycloak-heroku)：
+我补充了一个包含[微信 idp 的 keycloak server docker 镜像](https://hub.docker.com/r/monsterlin2024/keycloak-heroku)：
 
 ```shell script
 docker pull jefftian/keycloak-heroku:latest
+
+docker pull monsterlin2024/keycloak-heroku:26.0-wx0.6
 ```
 
 ## 一键部署
@@ -175,6 +181,10 @@ Heroku 不再提供免费的 Dyno，部署到 Heroku 可能会产生费用。
 
 * 20240129（[0.5.13](https://github.com/Jeff-Tian/keycloak-services-social-weixin/releases/tag/0.5.13)）
     - 优化关注公众号即登录方案的微信后台配置。 详见《[基于 Keycloak 的关注微信公众号即登录方案再次升级：有意思的成长 - Jeff Tian的文章 - 知乎](https://zhuanlan.zhihu.com/p/680356153)》
+
+* 20250227（[0.6.0]
+    - 适配 quay.io/keycloak 26.0版本。由于keycloak 对类库org.keycloak.services.HttpRequestImpl进行修订，转而使用类库org.keycloak.quarkus.runtime.integration.resteasy.QuarkusHttpRequest。
+
 
 ## Star History
 

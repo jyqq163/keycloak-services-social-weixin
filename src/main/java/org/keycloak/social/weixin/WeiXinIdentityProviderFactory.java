@@ -18,7 +18,7 @@ public class WeiXinIdentityProviderFactory extends
 
     @Override
     public String getName() {
-        return "微信";
+        return "微信二维码登录";
     }
 
     @Override

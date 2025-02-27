@@ -36,7 +36,6 @@ public class TicketStatusProvider implements UserStorageProvider {
             this.em = jpaProvider.getEntityManager();
             return;
         }
-        logger.warn("em is null");
 
         this.em = new EntityManager() {
             @Override

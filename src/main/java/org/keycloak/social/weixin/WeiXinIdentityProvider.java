@@ -22,6 +22,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 import jakarta.ws.rs.core.*;
+import org.jboss.logging.Logger;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.broker.oidc.AbstractOAuth2IdentityProvider;
 import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
@@ -46,6 +47,7 @@ import org.keycloak.social.weixin.helpers.UserAgentHelper;
 
 public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth2IdentityProviderConfig>
         implements SocialIdentityProvider<OAuth2IdentityProviderConfig> {
+    private static final Logger wxlogger = Logger.getLogger(WeiXinIdentityProvider.class);
 
     private static final String TOKEN_URL = "https://api.weixin.qq.com/sns/oauth2/access_token";
 
@@ -97,7 +99,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
     @Override
     public Object callback(RealmModel realm, AuthenticationCallback callback, EventBuilder event) {
-        logger.info(String.format("callback event = %s", event));
+        wxlogger.info(String.format("callback event = %s", event));
         return new org.keycloak.social.weixin.Endpoint(this, callback, realm, event);
     }
 
@@ -110,16 +112,20 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
     protected BrokeredIdentityContext extractIdentityFromProfile(EventBuilder event, JsonNode profile) {
         String unionId = getJsonProperty(profile, "unionid");
         var openId = getJsonProperty(profile, "openid");
-
+        var nickname = getJsonProperty(profile, "nickname");
+        var avatar = getJsonProperty(profile, "headimgurl");
         var externalUserId = unionId != null && !unionId.isEmpty() ? unionId : openId;
 
-        BrokeredIdentityContext user = new BrokeredIdentityContext(externalUserId);
+        BrokeredIdentityContext user = new BrokeredIdentityContext(externalUserId,super.getConfig());
 
         user.setUsername(externalUserId);
         user.setBrokerUserId(externalUserId);
         user.setModelUsername(externalUserId);
-        user.setName(getJsonProperty(profile, "nickname"));
-        user.setIdpConfig(getConfig());
+        user.setName(nickname);
+
+        wxlogger.info("set user avatar to:" + avatar);
+        user.setUserAttribute("avatar", avatar);
+        //user.setIdpConfig(getConfig());
         user.setIdp(this);
         AbstractJsonUserAttributeMapper.storeUserProfileForMapper(user, profile, getConfig().getAlias());
 
@@ -136,17 +142,18 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         BrokeredIdentityContext context = null;
         try {
             JsonNode profile;
-            if (WechatLoginType.FROM_WECHAT_BROWSER.equals(wechatLoginType)) {
+            if (WechatLoginType.FROM_WECHAT_BROWSER.equals(wechatLoginType) ||
+                    WechatLoginType.FROM_PC_QR_CODE_SCANNING.equals(wechatLoginType)) {
                 String openid = extractTokenFromResponse(response, OPENID);
                 String url = PROFILE_URL.replace("ACCESS_TOKEN", accessToken).replace("OPENID", openid);
                 profile = SimpleHttp.doGet(url, session).asJson();
             } else {
                 profile = new ObjectMapper().readTree(response);
             }
-            logger.info("get userInfo =" + profile.toString());
+            wxlogger.info("get userInfo =" + profile.toString());
             context = extractIdentityFromProfile(null, profile);
         } catch (IOException e) {
-            logger.error(e);
+            wxlogger.error(e);
         }
 
         assert context != null;
@@ -157,22 +164,22 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
     @Override
     public Response performLogin(AuthenticationRequest request) {
-        logger.info(String.format("performing Login = %s", request != null && request.getUriInfo() != null ? request.getUriInfo().getAbsolutePath().toString() : "null"));
+        wxlogger.info(String.format("performing Login = %s", request != null && request.getUriInfo() != null ? request.getUriInfo().getAbsolutePath().toString() : "null"));
         try {
             URI authorizationUrl = createAuthorizationUrl(Objects.requireNonNull(request)).build();
-            logger.info(String.format("authorizationUrl = %s", authorizationUrl.toString()));
+            wxlogger.info(String.format("authorizationUrl = %s", authorizationUrl.toString()));
 
             String ua = request.getSession().getContext().getRequestHeaders().getHeaderString("user-agent").toLowerCase();
-            logger.info(String.format("user-agent = %s", ua));
+            wxlogger.info(String.format("user-agent = %s", ua));
 
             if (UserAgentHelper.isWechatBrowser(ua)) {
                 URI location = URI.create(String.format("%s#wechat_redirect", authorizationUrl));
-                logger.info(String.format("see other %s", location));
+                wxlogger.info(String.format("see other %s", location));
 
                 return Response.seeOther(location).build();
             }
 
-            logger.info(String.format("see other %s", authorizationUrl));
+            wxlogger.info(String.format("see other %s", authorizationUrl));
 
             return Response.seeOther(authorizationUrl).build();
         } catch (Exception e) {
@@ -191,10 +198,10 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
     protected UriBuilder createAuthorizationUrl(AuthenticationRequest request) {
         final UriBuilder uriBuilder;
         String ua = request.getSession().getContext().getRequestHeaders().getHeaderString("user-agent").toLowerCase();
-        logger.info(String.format("creating auth url from %s", ua));
+        wxlogger.info(String.format("creating auth url from %s", ua));
 
         if (UserAgentHelper.isWechatBrowser(ua)) {// 是微信浏览器
-            logger.info("----------wechat");
+            wxlogger.info("----------wechat");
             uriBuilder = UriBuilder.fromUri(WECHAT_MOBILE_AUTH_URL);
             uriBuilder.queryParam(OAUTH2_PARAMETER_SCOPE, WECHAT_MP_DEFAULT_SCOPE)
                     .queryParam(OAUTH2_PARAMETER_STATE, request.getState().getEncoded())
@@ -206,9 +213,14 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         } else {
             var config = getConfig();
             if (config instanceof WeixinIdentityProviderConfig) {
+                var customizedLoginUrlForPc = ((WeixinIdentityProviderConfig) config).getCustomizedLoginUrlForPc();
                 if (config.getConfig().get(OPEN_CLIENT_ENABLED) != null && config.getConfig().get(OPEN_CLIENT_ENABLED).equals("true")) {
-                    logger.info("----------open client enabled");
-                    uriBuilder = UriBuilder.fromUri(OPEN_AUTH_URL);
+                    wxlogger.info("----------open client enabled");
+                    if (customizedLoginUrlForPc!=null){
+                        uriBuilder = UriBuilder.fromUri(customizedLoginUrlForPc);
+                    }else {
+                        uriBuilder = UriBuilder.fromUri(OPEN_AUTH_URL);
+                    }
                     uriBuilder.queryParam(OAUTH2_PARAMETER_SCOPE, OPEN_DEFAULT_SCOPE)
                             .queryParam(OAUTH2_PARAMETER_STATE, request.getState().getEncoded())
                             .queryParam(OAUTH2_PARAMETER_RESPONSE_TYPE, "code")
@@ -217,8 +229,6 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
                     return uriBuilder;
                 }
-
-                var customizedLoginUrlForPc = ((WeixinIdentityProviderConfig) config).getCustomizedLoginUrlForPc();
 
                 if (customizedLoginUrlForPc != null && !customizedLoginUrlForPc.isEmpty()) {
                     uriBuilder = UriBuilder.fromUri(customizedLoginUrlForPc);
@@ -231,7 +241,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
                     return uriBuilder;
                 } else {
-                    logger.info("未启用开放平台，且未配置自定义登录页面，则返回一个 html 页面，展示带参二维码");
+                    wxlogger.info("未启用开放平台，且未配置自定义登录页面，则返回一个 html 页面，展示带参二维码");
                     uriBuilder = UriBuilder.fromUri("/realms/" + request.getRealm().getName() + "/QrCodeResourceProviderFactory/mp-qr");
 
                     var wechatApi = new WechatMpApi(
@@ -242,7 +252,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                     );
 
                     var ticket = wechatApi.createTmpQrCode(new TicketRequest(2592000, "QR_STR_SCENE", new ActionInfo(new Scene("1")))).ticket;
-                    logger.info("ticket = " + ticket);
+                    wxlogger.info("ticket = " + ticket);
 
                     uriBuilder
                             .queryParam("ticket", ticket)
@@ -261,7 +271,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
         }
 
         String loginHint = request.getAuthenticationSession().getClientNote(OIDCLoginProtocol.LOGIN_HINT_PARAM);
-        logger.info("loginHint = " + loginHint);
+        wxlogger.info("loginHint = " + loginHint);
         if (getConfig().isLoginHint() && loginHint != null) {
             uriBuilder.queryParam(OIDCLoginProtocol.LOGIN_HINT_PARAM, loginHint);
         }
