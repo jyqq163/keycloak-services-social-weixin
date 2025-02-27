@@ -3,7 +3,7 @@ name: Release Workflow
 on:
   workflow_run:
     workflows: [ "Java CI with Maven" ]
-    branches: [ master ]
+    branches: [ 0.6.0-gh ]
     types:
       - completed
 
