@@ -429,7 +429,7 @@ class JsonHelperTest {
                 "  \"attributes\": \"\"\n" +
                 "}", JsonHelper.stringify(federatedUser, UserModel.class));
 
-        var user = WMPHelper.getUserSessionModel(new BrokeredIdentityContext("test"), federatedUser, new AuthenticationSessionModel() {
+        var user = WMPHelper.getUserSessionModel(new BrokeredIdentityContext("test", new IdentityProviderModel()), federatedUser, new AuthenticationSessionModel() {
                     @Override
                     public String getTabId() {
                         return null;

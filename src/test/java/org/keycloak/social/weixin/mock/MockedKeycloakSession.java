@@ -13,6 +13,7 @@ import org.keycloak.sessions.AuthenticationSessionModel;
 import org.keycloak.sessions.AuthenticationSessionProvider;
 import org.keycloak.urls.UrlType;
 import org.keycloak.vault.VaultTranscriber;
+import org.keycloak.Token;
 
 import java.net.URI;
 import java.util.Locale;
@@ -25,6 +26,16 @@ public class MockedKeycloakSession implements KeycloakSession {
 
     public MockedKeycloakSession(HttpRequest httpRequest) {
         this.httpRequest = httpRequest;
+    }
+
+    @Override
+    public boolean isClosed() {
+        return false;
+    }
+
+    @Override
+    public IdentityProviderStorageProvider identityProviders() {
+        return null;
     }
 
     @Override
@@ -56,18 +67,12 @@ public class MockedKeycloakSession implements KeycloakSession {
             }
 
             @Override
-            public <T> T getContextObject(Class<T> aClass) {
-                return null;
-            }
-
-            @Override
             public RealmModel getRealm() {
                 return null;
             }
 
             @Override
             public void setRealm(RealmModel realmModel) {
-
             }
 
             @Override
@@ -77,12 +82,15 @@ public class MockedKeycloakSession implements KeycloakSession {
 
             @Override
             public void setClient(ClientModel clientModel) {
-
             }
 
             @Override
             public ClientConnection getConnection() {
                 return null;
+            }
+
+            @Override
+            public void setConnection(ClientConnection connection) {
             }
 
             @Override
@@ -97,7 +105,6 @@ public class MockedKeycloakSession implements KeycloakSession {
 
             @Override
             public void setAuthenticationSession(AuthenticationSessionModel authenticationSessionModel) {
-
             }
 
             @Override
@@ -106,8 +113,43 @@ public class MockedKeycloakSession implements KeycloakSession {
             }
 
             @Override
+            public void setHttpRequest(HttpRequest request) {
+            }
+
+            @Override
             public HttpResponse getHttpResponse() {
                 return null;
+            }
+
+            @Override
+            public void setHttpResponse(HttpResponse response) {
+            }
+
+            @Override
+            public UserSessionModel getUserSession() {
+                return null;
+            }
+
+            @Override
+            public void setUserSession(UserSessionModel userSession) {
+            }
+
+            @Override
+            public Token getBearerToken() {
+                return null;
+            }
+
+            @Override
+            public void setBearerToken(Token token) {
+            }
+
+            @Override
+            public OrganizationModel getOrganization() {
+                return null;
+            }
+
+            @Override
+            public void setOrganization(OrganizationModel organization) {
             }
         };
     }

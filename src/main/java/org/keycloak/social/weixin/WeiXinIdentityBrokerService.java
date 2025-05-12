@@ -91,7 +91,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
         return null;
     }
 
-    public void init(KeycloakSession session, ClientConnection clientConnection, EventBuilder event, org.keycloak.http.HttpRequest request) {
+    public void init(KeycloakSession session, ClientConnection clientConnection, EventBuilder event) {
         if (session != null) {
             this.session = session;
         }
@@ -123,84 +123,6 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
             }
         });
 
-        // this.request = Objects.requireNonNullElseGet(request, () -> 
-        
-        // new HttpRequestImpl(new BaseHttpRequest(new ResteasyUriInfo("/", "/")) {
-        //     @Override
-        //     public HttpHeaders getHttpHeaders() {
-        //         return Objects.requireNonNull(session).getContext().getRequestHeaders();
-        //     }
-
-        //     @Override
-        //     public MultivaluedMap<String, String> getMutableHeaders() {
-        //         return null;
-        //     }
-
-        //     @Override
-        //     public InputStream getInputStream() {
-        //         return null;
-        //     }
-
-        //     @Override
-        //     public void setInputStream(InputStream stream) {
-
-        //     }
-
-        //     @Override
-        //     public String getHttpMethod() {
-        //         return null;
-        //     }
-
-        //     @Override
-        //     public void setHttpMethod(String method) {
-
-        //     }
-
-        //     @Override
-        //     public Object getAttribute(String attribute) {
-        //         return null;
-        //     }
-
-        //     @Override
-        //     public void setAttribute(String name, Object value) {
-
-        //     }
-
-        //     @Override
-        //     public void removeAttribute(String name) {
-
-        //     }
-
-        //     @Override
-        //     public Enumeration<String> getAttributeNames() {
-        //         return null;
-        //     }
-
-        //     @Override
-        //     public ResteasyAsynchronousContext getAsyncContext() {
-        //         return null;
-        //     }
-
-        //     @Override
-        //     public void forward(String path) {
-
-        //     }
-
-        //     @Override
-        //     public boolean wasForwarded() {
-        //         return false;
-        //     }
-
-        //     @Override
-        //     public String getRemoteAddress() {
-        //         return null;
-        //     }
-
-        //     @Override
-        //     public String getRemoteHost() {
-        //         return null;
-        //     }
-        // }));
         this.request = new QuarkusHttpRequest(CurrentRequestManager.get());
         this.event = Objects.requireNonNullElseGet(event, () -> new EventBuilder(this.realmModel, this.session, this.clientConnection)).event(EventType.IDENTITY_PROVIDER_LOGIN);
     }
@@ -218,6 +140,21 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
 
     private Response redirectToErrorPage(AuthenticationSessionModel authSession, Response.Status status, String message, Object... parameters) {
         return redirectToErrorPage(authSession, status, message, null, parameters);
+    }
+
+    // fix: 无限递归
+    private Response redirectToErrorPage(AuthenticationSessionModel authSession, Response.Status status, String message, Throwable throwable, Object... parameters) {
+        if (throwable != null) {
+            logger.error(message, throwable);
+        } else {
+            logger.error(message);
+        }
+
+        if (authSession != null) {
+            return ErrorPage.error(session, authSession, status, message, parameters);
+        } else {
+            return ErrorPage.error(session, null, status, message, parameters);
+        }
     }
 
     private void fireErrorEvent(String message) {
@@ -309,10 +246,6 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
             AuthenticationSessionModel authSession = checks.getAuthenticationSession();
 
             if (authSession != null) {
-                if (code.equals("wmp")) {
-                    return ParsedCodeContext.response(checks.getResponse());
-                }
-
                 // Check if error happened during login or during linking from account management
                 Response accountManagementFailedLinking = checkAccountManagementFailedLinking(authSession, Messages.STALE_CODE_ACCOUNT);
                 if (accountManagementFailedLinking != null) {
@@ -488,7 +421,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
                     .setHttpHeaders(headers)
                     .setUriInfo(session.getContext().getUri())
                     .setEventBuilder(event);
-            return protocol.sendError(authSession, error);
+            return protocol.sendError(authSession, error, null);
         }
         return null;
     }

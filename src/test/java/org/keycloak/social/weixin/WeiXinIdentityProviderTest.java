@@ -56,7 +56,8 @@ public class WeiXinIdentityProviderTest {
 
     @Test
     public void pcGoesToQRConnect() {
-        IdentityBrokerState state = IdentityBrokerState.decoded("state", "clientId", "clientId", "tabId");
+        IdentityBrokerState state = IdentityBrokerState.decoded("state", "clientId", "clientId", "tabId", null);
+
         var authSession = new MockedAuthenticationSessionModel();
 
         org.keycloak.http.HttpRequest httpRequest = new MockedHttpRequest();
@@ -64,11 +65,10 @@ public class WeiXinIdentityProviderTest {
                 "://redirect.to.customized/url");
 
         var res = weiXinIdentityProvider.performLogin(request);
-
         Assert.assertEquals("303 redirect", Response.Status.SEE_OTHER.getStatusCode(), res.getStatus());
         Assert.assertEquals("pc goes to customized login url", "https://open.weixin.qq" +
                 ".com/connect/qrconnect?scope=snsapi_login&state=state.tabId" +
-                ".clientId&appid=clientId&redirect_uri=https%3A%2F%2Fredirect.to" +
+                ".Y2xpZW50SWQ&appid=clientId&redirect_uri=https%3A%2F%2Fredirect.to" +
                 ".customized%2Furl&nonce=ccec3eea-fd08-4ca2-b83a-2921228f2480", res.getLocation().toString());
     }
 
@@ -83,7 +83,7 @@ public class WeiXinIdentityProviderTest {
 
         weiXinIdentityProvider = new WeiXinIdentityProvider(null, config);
 
-        IdentityBrokerState state = IdentityBrokerState.decoded("state", "clientId", "clientId", "tabId");
+        IdentityBrokerState state = IdentityBrokerState.decoded("state", "clientId", "clientId", "tabId", null);
         var authSession = new MockedAuthenticationSessionModel();
 
         org.keycloak.http.HttpRequest httpRequest = new MockedHttpRequest();
@@ -113,7 +113,7 @@ public class WeiXinIdentityProviderTest {
 
         var sut = new WeiXinIdentityProvider(null, config);
 
-        var expectedUser = new BrokeredIdentityContext(sut.getJsonProperty(expectedJsonProfile, "unionid"));
+        var expectedUser = new BrokeredIdentityContext(sut.getJsonProperty(expectedJsonProfile, "unionid"), sut.getConfig());
         expectedUser.setUsername(sut.getJsonProperty(expectedJsonProfile, "openid"));
         expectedUser.setEmail("null");
 

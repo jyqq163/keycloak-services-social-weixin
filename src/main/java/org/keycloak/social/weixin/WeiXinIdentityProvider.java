@@ -221,6 +221,7 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                     }else {
                         uriBuilder = UriBuilder.fromUri(OPEN_AUTH_URL);
                     }
+
                     uriBuilder.queryParam(OAUTH2_PARAMETER_SCOPE, OPEN_DEFAULT_SCOPE)
                             .queryParam(OAUTH2_PARAMETER_STATE, request.getState().getEncoded())
                             .queryParam(OAUTH2_PARAMETER_RESPONSE_TYPE, "code")
@@ -231,6 +232,10 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                 }
 
                 if (customizedLoginUrlForPc != null && !customizedLoginUrlForPc.isEmpty()) {
+                    wxlogger.info("----------customized login url for pc");
+                    wxlogger.info("clientId: " + config.getConfig().get(WECHAT_MP_APP_ID));
+                    wxlogger.info("state: " + request.getState().getEncoded());
+
                     uriBuilder = UriBuilder.fromUri(customizedLoginUrlForPc);
 
                     uriBuilder.queryParam(OAUTH2_PARAMETER_SCOPE, WECHAT_MP_DEFAULT_SCOPE)
@@ -262,6 +267,8 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
                     ;
                 }
             } else {
+                wxlogger.info("----------default");
+                wxlogger.info("clientId: " + config.getClientId());
                 uriBuilder = UriBuilder.fromUri(config.getAuthorizationUrl());
                 uriBuilder.queryParam(OAUTH2_PARAMETER_SCOPE, config.getDefaultScope())
                         .queryParam(OAUTH2_PARAMETER_STATE, request.getState().getEncoded())

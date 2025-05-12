@@ -110,7 +110,7 @@ public class Endpoint extends WeiXinIdentityProvider {
     private Response authenticated(BrokeredIdentityContext federatedIdentity) {
         var weiXinIdentityBrokerService
                 = new WeiXinIdentityBrokerService(realm);
-        weiXinIdentityBrokerService.init(weiXinIdentityProvider.session, clientConnection, event, request);
+        weiXinIdentityBrokerService.init(weiXinIdentityProvider.session, clientConnection, event);
 
         return weiXinIdentityBrokerService.authenticated(federatedIdentity);
     }
