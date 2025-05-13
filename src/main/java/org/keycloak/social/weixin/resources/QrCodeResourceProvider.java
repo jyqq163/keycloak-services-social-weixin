@@ -51,7 +51,7 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
 
     @GET
     @Path("mp-qr")
-    @Produces(MediaType.TEXT_HTML)
+    @Produces(MediaType.TEXT_HTML + ";charset=UTF-8")
     public Response mpQrUrl(@QueryParam("ticket") String ticket, @QueryParam("qr-code-url") String qrCodeUrl, @QueryParam("state") String state, @QueryParam(OAUTH2_PARAMETER_REDIRECT_URI) String redirectUri) {
         logger.info("展示一个 HTML 页面，该页面使用 React 展示一个组件，它调用一个后端 API，得到一个带参二维码 URL，并将该 URL 作为 img 的 src 属性值");
 
@@ -65,15 +65,30 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
                 <!DOCTYPE html>
                 <html>
                 <head>
+                    <meta charset="UTF-8">
                     <title>QR Code Page</title>
+                    <style>
+                        body {
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            min-height: 100vh;
+                            margin: 0;
+                            font-family: Arial, sans-serif;
+                        }
+                        #qrCodeContainer {
+                            text-align: center;
+                        }
+                        img {
+                            max-width: 300px;
+                            height: auto;
+                        }
+                    </style>
                 </head>
                 <body>
-                    <p>请使用微信扫描下方二维码：</p>
                     <div id="qrCodeContainer">
+                        <p>请使用微信扫描下方二维码：</p>
                         <img src="%s" alt="%s">
-                
-                        <p></p>
-                        <p><button id="login-by-username-password" onclick="keycloak.login({ idpHint: 'username', redirectUri: '%s' });" type="button">使用密码登录</button></p>
                     </div>
                     <script type="text/javascript">
                         async function fetchQrScanStatus() {
