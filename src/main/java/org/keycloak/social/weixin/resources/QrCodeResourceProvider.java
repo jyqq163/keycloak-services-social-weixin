@@ -83,12 +83,21 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
                             max-width: 300px;
                             height: auto;
                         }
+                        .status-text {
+                            margin-top: 20px;
+                            font-size: 16px;
+                            color: #666;
+                        }
+                        .status-text.scanned {
+                            color: #4CAF50;
+                        }
                     </style>
                 </head>
                 <body>
                     <div id="qrCodeContainer">
-                        <p>请使用微信扫描下方二维码：</p>
+                        <p>请使用微信扫描下方二维码</p>
                         <img src="%s" alt="%s">
+                        <p id="statusText" class="status-text">等待扫码...</p>
                     </div>
                     <script type="text/javascript">
                         async function fetchQrScanStatus() {
@@ -99,11 +108,19 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
                             })
                 
                             const {status, openid} = await res.json()
+                            const statusText = document.getElementById('statusText')
                 
-                            if (openid) {
+                            if (status === 'scanned') {
+                                statusText.textContent = '已扫码，正在登录...'
+                                statusText.classList.add('scanned')
                                 window.location.href = `%s?openid=${openid}&state=%s`
-                            } else {
+                            } else if (status === 'not_scanned') {
+                                statusText.textContent = '等待扫码...'
                                 setTimeout(fetchQrScanStatus, 1000)
+                            } else if (status === 'expired') {
+                                statusText.textContent = '二维码已过期，请重新扫码二维码'
+                            } else {
+                                statusText.textContent = '未知错误，请重新扫码二维码'
                             }
                         }
                 
@@ -124,7 +141,7 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
                 </html>
                 """;
 
-        String htmlContent = String.format(template, qrCodeUrl, ticket, accountRedirectUri, ticket, redirectUri, state, host, realmName, accountRedirectUri);
+        String htmlContent = String.format(template, qrCodeUrl, ticket, ticket, redirectUri, state, host, realmName, accountRedirectUri);
 
         // 返回包含HTML内容的响应
         return Response.ok(htmlContent, MediaType.TEXT_HTML_TYPE).build();
