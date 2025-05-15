@@ -66,6 +66,8 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
     public static final String WECHAT_MP_APP_ID = "clientId2";
     public static final String WECHAT_MP_APP_SECRET = "clientSecret2";
 
+    public static final String WECHAT_MP_APP_TOKEN = "clientToken";
+
     public static final String PROFILE_URL = "https://api.weixin.qq.com/sns/userinfo?access_token=ACCESS_TOKEN&openid=OPENID&lang=zh_CN";
 
     public static final String WMP_APP_ID = "wmpClientId";
@@ -74,7 +76,6 @@ public class WeiXinIdentityProvider extends AbstractOAuth2IdentityProvider<OAuth
 
     public static final String OPENID = "openid";
     public static final String WECHATFLAG = "micromessenger";
-
     public final WeixinIdentityCustomAuth customAuth;
     protected KeycloakSession session;
 

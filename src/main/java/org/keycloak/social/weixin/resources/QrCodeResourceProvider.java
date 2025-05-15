@@ -7,8 +7,12 @@ import jakarta.ws.rs.core.Response;
 import lombok.SneakyThrows;
 import org.apache.commons.collections4.map.HashedMap;
 import org.jboss.logging.Logger;
+import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
+import org.keycloak.models.IdentityProviderModel;
+import org.keycloak.models.IdentityProviderStorageProvider;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.services.resource.RealmResourceProvider;
+import org.keycloak.social.weixin.WeiXinIdentityProvider;
 import org.keycloak.social.weixin.cache.TicketStatusProvider;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
@@ -20,6 +24,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import static org.keycloak.broker.oidc.AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_REDIRECT_URI;
+import static org.keycloak.social.weixin.helpers.WechatMpHelper.isWechatMpMessage;
 
 public class QrCodeResourceProvider implements RealmResourceProvider {
     private final KeycloakSession session;
@@ -194,7 +199,7 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
     @Consumes(MediaType.APPLICATION_XML)
     @Produces(MediaType.APPLICATION_JSON)
     public Response mpQrScanStatusScanned(String xmlData) {
-        logger.info("接收到微信服务器发来的事件： " + xmlData);
+        logger.info("查询二维码状态： " + xmlData);
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
@@ -230,8 +235,39 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
     @Path("message")
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response message(String xmlData) {
-        logger.info("接收到微信服务器发来的事件： " + xmlData);
+    public Response message(
+            @QueryParam("signature") String signature,
+            @QueryParam("timestamp") String timestamp,
+            @QueryParam("nonce") String nonce,
+            String xmlData
+    ) {
+        logger.info("接收微信消息和事件" + xmlData);
+        logger.info("查询参数: signature=" + signature + ", timestamp=" + timestamp + ", nonce=" + nonce);
+
+        // 获取配置的WECHAT_MP_APP_TOKEN
+        IdentityProviderStorageProvider idpStorage = session.getProvider(IdentityProviderStorageProvider.class);
+        IdentityProviderModel idpModel = idpStorage.getByAlias("weixin");
+        if (idpModel == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("Identity Provider not found")
+                    .build();
+        }
+        OAuth2IdentityProviderConfig config = new OAuth2IdentityProviderConfig(idpModel);
+        String token = config.getConfig().get(WeiXinIdentityProvider.WECHAT_MP_APP_TOKEN);
+
+        if (token != null && !token.isEmpty()) {
+            // 使用配置的token进行验证
+            if (!isWechatMpMessage(token, signature, timestamp, nonce)) {
+                logger.warn("签名验证失败");
+                return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid signature").build();
+            }
+        } else {
+            // 如果没有配置token，使用默认的验证方式
+            if (!isWechatMpMessage(signature, timestamp, nonce)) {
+                logger.warn("签名验证失败");
+                return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid signature").build();
+            }
+        }
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
@@ -252,8 +288,8 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
         var ticketSaved = this.ticketStatusProvider.getTicketStatus(xmlTicket);
         if (ticketSaved == null) {
             logger.warn(String.format("ticket is not found, {%s}", xmlTicket));
-            return Response.ok("success").build();
-//            return Response.ok(Map.of("status", "not_scanned")).build();
+//            return Response.ok("success").build();
+            return Response.ok(Map.of("status", "ticket_not_found")).build();
         }
 
         ticketSaved.setStatus("scanned");
@@ -269,8 +305,39 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
     @GET
     @Path("message")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response message(@QueryParam("echostr") String echostr, String xmlData) {
+    public Response message(
+            @QueryParam("echostr") String echostr, @QueryParam("signature") String signature,
+            @QueryParam("timestamp") String timestamp,
+            @QueryParam("nonce") String nonce,
+            String xmlData) {
+
         logger.info("接收到微信服务器发来的事件： " + xmlData);
+        logger.info("查询参数: signature=" + signature + ", timestamp=" + timestamp + ", nonce=" + nonce);
+
+        // 获取配置的WECHAT_MP_APP_TOKEN
+        IdentityProviderStorageProvider idpStorage = session.getProvider(IdentityProviderStorageProvider.class);
+        IdentityProviderModel idpModel = idpStorage.getByAlias("weixin");
+        if (idpModel == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("Identity Provider not found")
+                    .build();
+        }
+        OAuth2IdentityProviderConfig config = new OAuth2IdentityProviderConfig(idpModel);
+        String token = config.getConfig().get(WeiXinIdentityProvider.WECHAT_MP_APP_TOKEN);
+
+        if (token != null && !token.isEmpty()) {
+            // 使用配置的token进行验证
+            if (!isWechatMpMessage(token, signature, timestamp, nonce)) {
+                logger.warn("签名验证失败");
+                return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid signature").build();
+            }
+        } else {
+            // 如果没有配置token，使用默认的验证方式
+            if (!isWechatMpMessage(signature, timestamp, nonce)) {
+                logger.warn("签名验证失败");
+                return Response.status(Response.Status.UNAUTHORIZED).entity("Invalid signature").build();
+            }
+        }
 
         return Response.ok(echostr).build();
     }

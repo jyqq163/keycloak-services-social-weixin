@@ -49,6 +49,11 @@ public class WeiXinIdentityProviderFactory extends
                 .helpText("当用户使用 PC 进行关注微信公众号即登录时，要使用的 app Secret，即微信公众号（不是开放平台）的 app secret。可以和上面的 Client Secret 一样，也可以不一样")
                 .type(ProviderConfigProperty.STRING_TYPE)
                 .add()
+                .property().name(WeiXinIdentityProvider.WECHAT_MP_APP_TOKEN)
+                .label("PC 用的公众号 服务器配置的Token")
+                .helpText("当用户使用 PC 进行关注微信公众号即登录时，服务器配置选项的令牌，校验signature签名是否正确，以判断请求是否来自微信服务器。 （仅适用于明文模式）")
+                .type(ProviderConfigProperty.STRING_TYPE)
+                .add()
 
                 .property().name(WeiXinIdentityProvider.CUSTOMIZED_LOGIN_URL_FOR_PC)
                 .label("PC 登录 URL")

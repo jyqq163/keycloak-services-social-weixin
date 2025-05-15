@@ -3,6 +3,7 @@ package org.keycloak.social.weixin.helpers;
 import lombok.SneakyThrows;
 
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 public class WechatMpHelper {
@@ -21,6 +22,16 @@ public class WechatMpHelper {
     @SneakyThrows
     public static boolean isWechatMpMessage(String signature, String timestamp, String nonce) {
         var sortedArr = Arrays.stream(new String[]{"uni-heart", timestamp, nonce}).sorted().toArray();
+        return verify(signature, sortedArr);
+    }
+
+    @SneakyThrows
+    public static boolean isWechatMpMessage(String token, String signature, String timestamp, String nonce) {
+        var sortedArr = Arrays.stream(new String[]{token, timestamp, nonce}).sorted().toArray();
+        return verify(signature, sortedArr);
+    }
+
+    private static boolean verify(String signature, Object[] sortedArr) throws NoSuchAlgorithmException {
         StringBuilder content = new StringBuilder();
         for (var item : sortedArr) {
             content.append(item);
