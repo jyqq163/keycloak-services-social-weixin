@@ -5,13 +5,8 @@ To install the social weixin one has to:
 * Add the jar to the Keycloak server:
   * `$ cp target/keycloak-services-social-weixin-*.jar _KEYCLOAK_HOME_/providers/`
 
-* Add three templates to the Keycloak server:
-  * `$ cp templates/realm-identity-provider-weixin.html _KEYCLOAK_HOME_/themes/base/admin/resources/partials`
-  * `$ cp templates/realm-identity-provider-weixin-ext.html _KEYCLOAK_HOME_/themes/base/admin/resources/partials`
   
-
-* 20180730
-1 增加自适应微信登录功能。
-2 账号关联默认使用微信unionid，如unionid不存在则使用openId
-3 pc和wechat使用同一套账号则必须绑定同一个开放平台，否则会绑定不同账号
-4 wechat信息非必填,默认使用pc方式登录
+* 20251114
+1 升级至keycloak-26.4.4版本
+2 新增WeiXin OAuth2属于可自定义设置url.
+3 原有WeiXin降级处理只支持扫描登录,不支持微信浏览器授权登录等方式,如有需求请使用新增的WeiXin OAuth2

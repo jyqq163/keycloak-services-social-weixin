@@ -6,10 +6,10 @@ import org.keycloak.broker.social.SocialIdentityProviderFactory;
 import org.keycloak.models.IdentityProviderModel;
 import org.keycloak.models.KeycloakSession;
 
-public class WeiXinIdentityProviderFactory extends AbstractIdentityProviderFactory<WeiXinIdentityProvider> implements
-    SocialIdentityProviderFactory<WeiXinIdentityProvider> {
+public class OAuth2WeiXinIdentityProviderFactory extends AbstractIdentityProviderFactory<OAuth2WeiXinIdentityProvider> implements
+    SocialIdentityProviderFactory<OAuth2WeiXinIdentityProvider> {
 
-    public static final String PROVIDER_ID = "weixin";
+    public static final String PROVIDER_ID = "weixin-oauth2";
 
     @Override
     public String getId() {
@@ -18,12 +18,12 @@ public class WeiXinIdentityProviderFactory extends AbstractIdentityProviderFacto
 
     @Override
     public String getName() {
-        return "WeiXin";
+        return "WeiXin OAuth2";
     }
 
     @Override
-    public WeiXinIdentityProvider create(KeycloakSession session, IdentityProviderModel model) {
-        return new WeiXinIdentityProvider(session, new OAuth2IdentityProviderConfig(model));
+    public OAuth2WeiXinIdentityProvider create(KeycloakSession session, IdentityProviderModel model) {
+        return new OAuth2WeiXinIdentityProvider(session, new OAuth2IdentityProviderConfig(model));
     }
 
     @Override
