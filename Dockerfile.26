@@ -1,0 +1,5 @@
+FROM quay.io/keycloak/keycloak:26.0
+
+COPY target/keycloak-services-social-weixin-0.6.17.jar /opt/keycloak/providers/
+
+CMD ["start-dev", "--hostname-strict=false"]
