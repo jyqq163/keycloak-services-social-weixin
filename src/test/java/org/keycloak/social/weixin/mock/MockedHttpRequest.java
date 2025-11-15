@@ -39,4 +39,9 @@ public class MockedHttpRequest implements org.keycloak.http.HttpRequest {
     public UriInfo getUri() {
         return null;
     }
+
+    @Override
+    public boolean isProxyTrusted() {
+        return true;
+    }
 }

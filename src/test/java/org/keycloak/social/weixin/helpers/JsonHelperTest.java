@@ -7,12 +7,12 @@ import org.keycloak.models.*;
 import org.keycloak.sessions.AuthenticationSessionModel;
 import org.keycloak.sessions.RootAuthenticationSessionModel;
 import org.keycloak.social.weixin.WMPUserSessionModel;
-import org.keycloak.social.weixin.helpers.JsonHelper;
-import org.keycloak.social.weixin.helpers.WMPHelper;
+import org.keycloak.social.weixin.WeixinIdentityProviderConfig;
 
-import java.util.*;
-import java.util.function.*;
-import java.util.stream.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Stream;
 
 class JsonHelperTest {
 
@@ -141,207 +141,7 @@ class JsonHelperTest {
 
             @Override
             public Stream<GroupModel> getGroupsStream() {
-                return new Stream<GroupModel>() {
-                    @Override
-                    public Stream<GroupModel> filter(Predicate<? super GroupModel> predicate) {
-                        return Stream.empty();
-                    }
-
-                    @Override
-                    public <R> Stream<R> map(Function<? super GroupModel, ? extends R> mapper) {
-                        return Stream.empty();
-                    }
-
-                    @Override
-                    public IntStream mapToInt(ToIntFunction<? super GroupModel> mapper) {
-                        return IntStream.empty();
-                    }
-
-                    @Override
-                    public LongStream mapToLong(ToLongFunction<? super GroupModel> mapper) {
-                        return LongStream.empty();
-                    }
-
-                    @Override
-                    public DoubleStream mapToDouble(ToDoubleFunction<? super GroupModel> mapper) {
-                        return DoubleStream.empty();
-                    }
-
-                    @Override
-                    public <R> Stream<R> flatMap(Function<? super GroupModel, ? extends Stream<? extends R>> mapper) {
-                        return Stream.empty();
-                    }
-
-                    @Override
-                    public IntStream flatMapToInt(Function<? super GroupModel, ? extends IntStream> mapper) {
-                        return IntStream.empty();
-                    }
-
-                    @Override
-                    public LongStream flatMapToLong(Function<? super GroupModel, ? extends LongStream> mapper) {
-                        return LongStream.empty();
-                    }
-
-                    @Override
-                    public DoubleStream flatMapToDouble(Function<? super GroupModel, ? extends DoubleStream> mapper) {
-                        return DoubleStream.empty();
-                    }
-
-                    @Override
-                    public Stream<GroupModel> distinct() {
-                        return Stream.empty();
-                    }
-
-                    @Override
-                    public Stream<GroupModel> sorted() {
-                        return Stream.empty();
-                    }
-
-                    @Override
-                    public Stream<GroupModel> sorted(Comparator<? super GroupModel> comparator) {
-                        return Stream.empty();
-                    }
-
-                    @Override
-                    public Stream<GroupModel> peek(Consumer<? super GroupModel> action) {
-                        return Stream.empty();
-                    }
-
-                    @Override
-                    public Stream<GroupModel> limit(long maxSize) {
-                        return Stream.empty();
-                    }
-
-                    @Override
-                    public Stream<GroupModel> skip(long n) {
-                        return Stream.empty();
-                    }
-
-                    @Override
-                    public void forEach(Consumer<? super GroupModel> action) {
-
-                    }
-
-                    @Override
-                    public void forEachOrdered(Consumer<? super GroupModel> action) {
-
-                    }
-
-                    @Override
-                    public Object[] toArray() {
-                        return new Object[0];
-                    }
-
-                    @Override
-                    public <A> A[] toArray(IntFunction<A[]> generator) {
-                        return null;
-                    }
-
-                    @Override
-                    public GroupModel reduce(GroupModel identity, BinaryOperator<GroupModel> accumulator) {
-                        return null;
-                    }
-
-                    @Override
-                    public Optional<GroupModel> reduce(BinaryOperator<GroupModel> accumulator) {
-                        return Optional.empty();
-                    }
-
-                    @Override
-                    public <U> U reduce(U identity, BiFunction<U, ? super GroupModel, U> accumulator, BinaryOperator<U> combiner) {
-                        return null;
-                    }
-
-                    @Override
-                    public <R> R collect(Supplier<R> supplier, BiConsumer<R, ? super GroupModel> accumulator, BiConsumer<R, R> combiner) {
-                        return null;
-                    }
-
-                    @Override
-                    public <R, A> R collect(Collector<? super GroupModel, A, R> collector) {
-                        return null;
-                    }
-
-                    @Override
-                    public Optional<GroupModel> min(Comparator<? super GroupModel> comparator) {
-                        return Optional.empty();
-                    }
-
-                    @Override
-                    public Optional<GroupModel> max(Comparator<? super GroupModel> comparator) {
-                        return Optional.empty();
-                    }
-
-                    @Override
-                    public long count() {
-                        return 0;
-                    }
-
-                    @Override
-                    public boolean anyMatch(Predicate<? super GroupModel> predicate) {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean allMatch(Predicate<? super GroupModel> predicate) {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean noneMatch(Predicate<? super GroupModel> predicate) {
-                        return false;
-                    }
-
-                    @Override
-                    public Optional<GroupModel> findFirst() {
-                        return Optional.empty();
-                    }
-
-                    @Override
-                    public Optional<GroupModel> findAny() {
-                        return Optional.empty();
-                    }
-
-                    @Override
-                    public Iterator<GroupModel> iterator() {
-                        return null;
-                    }
-
-                    @Override
-                    public Spliterator<GroupModel> spliterator() {
-                        return null;
-                    }
-
-                    @Override
-                    public boolean isParallel() {
-                        return false;
-                    }
-
-                    @Override
-                    public Stream<GroupModel> sequential() {
-                        return Stream.empty();
-                    }
-
-                    @Override
-                    public Stream<GroupModel> parallel() {
-                        return Stream.empty();
-                    }
-
-                    @Override
-                    public Stream<GroupModel> unordered() {
-                        return Stream.empty();
-                    }
-
-                    @Override
-                    public Stream<GroupModel> onClose(Runnable closeHandler) {
-                        return Stream.empty();
-                    }
-
-                    @Override
-                    public void close() {
-
-                    }
-                };
+                return null;
             }
 
             @Override
@@ -429,7 +229,9 @@ class JsonHelperTest {
                 "  \"attributes\": \"\"\n" +
                 "}", JsonHelper.stringify(federatedUser, UserModel.class));
 
-        var user = WMPHelper.getUserSessionModel(new BrokeredIdentityContext("test", new IdentityProviderModel()), federatedUser, new AuthenticationSessionModel() {
+        var config = new WeixinIdentityProviderConfig();
+        config.setWmpClientId("123456");
+        var user = WMPHelper.getUserSessionModel(new BrokeredIdentityContext("test", config), federatedUser, new AuthenticationSessionModel() {
                     @Override
                     public String getTabId() {
                         return null;

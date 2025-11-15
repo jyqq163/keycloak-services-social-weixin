@@ -1,21 +1,13 @@
 package org.keycloak.social.weixin;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.Objects;
-import java.util.concurrent.CancellationException;
-import java.util.stream.Stream;
-
+import jakarta.ws.rs.core.*;
 import org.jboss.logging.Logger;
 import org.keycloak.OAuthErrorException;
 import org.keycloak.authentication.AuthenticationProcessor;
 import org.keycloak.authentication.authenticators.broker.AbstractIdpAuthenticator;
 import org.keycloak.authentication.authenticators.broker.util.PostBrokerLoginConstants;
 import org.keycloak.authentication.authenticators.broker.util.SerializedBrokeredIdentityContext;
-import org.keycloak.broker.provider.BrokeredIdentityContext;
-import org.keycloak.broker.provider.IdentityBrokerException;
-import org.keycloak.broker.provider.IdentityProvider;
-import org.keycloak.broker.provider.IdentityProviderMapper;
+import org.keycloak.broker.provider.*;
 import org.keycloak.broker.provider.util.IdentityBrokerState;
 import org.keycloak.common.ClientConnection;
 import org.keycloak.common.util.ObjectUtil;
@@ -24,19 +16,9 @@ import org.keycloak.events.Details;
 import org.keycloak.events.Errors;
 import org.keycloak.events.EventBuilder;
 import org.keycloak.events.EventType;
-import org.keycloak.models.AccountRoles;
-import org.keycloak.models.ClientModel;
-import org.keycloak.models.Constants;
-import org.keycloak.models.FederatedIdentityModel;
-import org.keycloak.models.IdentityProviderMapperModel;
-import org.keycloak.models.IdentityProviderModel;
-import org.keycloak.models.KeycloakSession;
-import org.keycloak.models.KeycloakSessionFactory;
-import org.keycloak.models.RealmModel;
-import org.keycloak.models.RoleModel;
-import org.keycloak.models.UserModel;
-import org.keycloak.models.UserProvider;
-import org.keycloak.models.UserSessionModel;
+import org.keycloak.http.FormPartValue;
+import org.keycloak.http.HttpRequest;
+import org.keycloak.models.*;
 import org.keycloak.models.utils.FormMessage;
 import org.keycloak.protocol.LoginProtocol;
 import org.keycloak.protocol.oidc.TokenManager;
@@ -58,12 +40,12 @@ import org.keycloak.social.weixin.helpers.JsonHelper;
 import org.keycloak.social.weixin.helpers.WMPHelper;
 import org.keycloak.util.JsonSerialization;
 
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.UriBuilder;
-import org.keycloak.quarkus.runtime.integration.resteasy.QuarkusHttpRequest;
-import org.jboss.resteasy.reactive.server.core.CurrentRequestManager;
+import java.io.IOException;
+import java.net.URI;
+import java.security.cert.X509Certificate;
+import java.util.Objects;
+import java.util.concurrent.CancellationException;
+import java.util.stream.Stream;
 
 public class WeiXinIdentityBrokerService implements IdentityProvider.AuthenticationCallback {
     public final RealmModel realmModel;
@@ -91,7 +73,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
         return null;
     }
 
-    public void init(KeycloakSession session, ClientConnection clientConnection, EventBuilder event) {
+    public void init(KeycloakSession session, ClientConnection clientConnection, EventBuilder event, org.keycloak.http.HttpRequest request) {
         if (session != null) {
             this.session = session;
         }
@@ -123,7 +105,43 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
             }
         });
 
-        this.request = new QuarkusHttpRequest(CurrentRequestManager.get());
+        this.request = Objects.requireNonNullElseGet(request, () -> new HttpRequest() {
+            @Override
+            public String getHttpMethod() {
+                return "";
+            }
+
+            @Override
+            public MultivaluedMap<String, String> getDecodedFormParameters() {
+                return null;
+            }
+
+            @Override
+            public MultivaluedMap<String, FormPartValue> getMultiPartFormParameters() {
+                return null;
+            }
+
+            @Override
+            public HttpHeaders getHttpHeaders() {
+                return Objects.requireNonNull(session).getContext().getRequestHeaders();
+            }
+
+            @Override
+            public X509Certificate[] getClientCertificateChain() {
+                return new X509Certificate[0];
+            }
+
+            @Override
+            public UriInfo getUri() {
+                return null;
+            }
+
+            @Override
+            public boolean isProxyTrusted() {
+                return false;
+            }
+        });
+
         this.event = Objects.requireNonNullElseGet(event, () -> new EventBuilder(this.realmModel, this.session, this.clientConnection)).event(EventType.IDENTITY_PROVIDER_LOGIN);
     }
 
@@ -246,6 +264,10 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
             AuthenticationSessionModel authSession = checks.getAuthenticationSession();
 
             if (authSession != null) {
+                if (code.equals("wmp")) {
+                    return ParsedCodeContext.response(checks.getResponse());
+                }
+
                 // Check if error happened during login or during linking from account management
                 Response accountManagementFailedLinking = checkAccountManagementFailedLinking(authSession, Messages.STALE_CODE_ACCOUNT);
                 if (accountManagementFailedLinking != null) {
@@ -273,10 +295,9 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
         String clientId = state.getClientId();
         String tabId = state.getTabId();
         String clientData = state.getClientData();
+        logger.info("decoded session code = " + code + ", clientid = " + clientId + ", tabId = " + tabId + ", clientData = " + clientData);
 
-        logger.info("decoded session code = " + code + ", clientid = " + clientId + ", tabId = " + tabId);
-
-        return parseSessionCode(code, clientId, tabId,clientData, context);
+        return parseSessionCode(code, clientId, tabId, clientData, context);
     }
 
     private boolean shouldPerformAccountLinking(AuthenticationSessionModel authSession, UserSessionModel userSession, String providerId) {
@@ -348,7 +369,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
         }
         context.getIdp().authenticationFinished(authSession, context);
 
-        AuthenticationManager.setClientScopesInSession(session,authSession);
+        AuthenticationManager.setClientScopesInSession(session, authSession);
         TokenManager.attachAuthenticationSession(session, userSession, authSession);
 
         logger.debugf("Linking account [%s] from identity provider [%s] to user [%s].", newModel, context.getIdpConfig().getAlias(), authenticatedUser);
@@ -421,7 +442,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
                     .setHttpHeaders(headers)
                     .setUriInfo(session.getContext().getUri())
                     .setEventBuilder(event);
-            return protocol.sendError(authSession, error, null);
+            return protocol.sendError(authSession, error, message);
         }
         return null;
     }
@@ -441,7 +462,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
 
         logger.debugf("Performing local authentication for user [%s].", federatedUser);
 
-        AuthenticationManager.setClientScopesInSession(session,authSession);
+        AuthenticationManager.setClientScopesInSession(session, authSession);
 
         String nextRequiredAction = AuthenticationManager.nextRequiredAction(session, authSession, request, event);
 
@@ -525,7 +546,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
             session.users().addFederatedIdentity(realmModel, federatedUser, federatedIdentityModel);
 
 
-            String isRegisteredNewUser = authSession.getAuthNote(AbstractIdpAuthenticator.BROKER_REGISTERED_NEW_USER);
+            String isRegisteredNewUser = authSession.getAuthNote(AbstractIdentityProvider.BROKER_REGISTERED_NEW_USER);
             if (Boolean.parseBoolean(isRegisteredNewUser)) {
 
                 logger.debugf("Registered new user '%s' after first login with identity provider '%s'. Identity provider username is '%s' . ", federatedUser.getUsername(), providerId, context.getUsername());
@@ -540,7 +561,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
                     });
                 }
 
-                if (context.getIdpConfig().isTrustEmail() && !Validation.isBlank(federatedUser.getEmail()) && !Boolean.parseBoolean(authSession.getAuthNote(AbstractIdpAuthenticator.UPDATE_PROFILE_EMAIL_CHANGED))) {
+                if (context.getIdpConfig().isTrustEmail() && !Validation.isBlank(federatedUser.getEmail()) && !Boolean.parseBoolean(authSession.getAuthNote(AbstractIdentityProvider.UPDATE_PROFILE_EMAIL_CHANGED))) {
                     logger.debugf("Email verified automatically after registration of user '%s' through Identity provider '%s' ", federatedUser.getUsername(), context.getIdpConfig().getAlias());
                     federatedUser.setEmailVerified(true);
                 }
@@ -743,7 +764,7 @@ public class WeiXinIdentityBrokerService implements IdentityProvider.Authenticat
     }
 
     @Override
-    public Response error(String s) {
+    public Response error(IdentityProviderModel idpConfig, String s) {
         return null;
     }
 

@@ -9,6 +9,6 @@ class WMPHelperTest {
 
     @Test
     void createStateForWMP() {
-        assertEquals("wmp.tab.client", WMPHelper.createStateForWMP("client", "tab", null));
+        assertEquals("wmp.tab.client.clientData", WMPHelper.createStateForWMP("client", "tab","clientData"));
     }
 }

@@ -1,6 +1,7 @@
 package org.keycloak.social.weixin.mock;
 
 import jakarta.ws.rs.core.HttpHeaders;
+import org.keycloak.Token;
 import org.keycloak.common.ClientConnection;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.http.HttpRequest;
@@ -13,7 +14,6 @@ import org.keycloak.sessions.AuthenticationSessionModel;
 import org.keycloak.sessions.AuthenticationSessionProvider;
 import org.keycloak.urls.UrlType;
 import org.keycloak.vault.VaultTranscriber;
-import org.keycloak.Token;
 
 import java.net.URI;
 import java.util.Locale;
@@ -29,16 +29,6 @@ public class MockedKeycloakSession implements KeycloakSession {
     }
 
     @Override
-    public boolean isClosed() {
-        return false;
-    }
-
-    @Override
-    public IdentityProviderStorageProvider identityProviders() {
-        return null;
-    }
-
-    @Override
     public KeycloakContext getContext() {
         return new KeycloakContext() {
             @Override
@@ -48,7 +38,7 @@ public class MockedKeycloakSession implements KeycloakSession {
 
             @Override
             public String getContextPath() {
-                return null;
+                return "";
             }
 
             @Override
@@ -57,7 +47,7 @@ public class MockedKeycloakSession implements KeycloakSession {
             }
 
             @Override
-            public KeycloakUriInfo getUri(UrlType urlType) {
+            public KeycloakUriInfo getUri(UrlType type) {
                 return null;
             }
 
@@ -72,7 +62,8 @@ public class MockedKeycloakSession implements KeycloakSession {
             }
 
             @Override
-            public void setRealm(RealmModel realmModel) {
+            public void setRealm(RealmModel realm) {
+
             }
 
             @Override
@@ -81,66 +72,8 @@ public class MockedKeycloakSession implements KeycloakSession {
             }
 
             @Override
-            public void setClient(ClientModel clientModel) {
-            }
+            public void setClient(ClientModel client) {
 
-            @Override
-            public ClientConnection getConnection() {
-                return null;
-            }
-
-            @Override
-            public void setConnection(ClientConnection connection) {
-            }
-
-            @Override
-            public Locale resolveLocale(UserModel userModel) {
-                return null;
-            }
-
-            @Override
-            public AuthenticationSessionModel getAuthenticationSession() {
-                return null;
-            }
-
-            @Override
-            public void setAuthenticationSession(AuthenticationSessionModel authenticationSessionModel) {
-            }
-
-            @Override
-            public HttpRequest getHttpRequest() {
-                return null;
-            }
-
-            @Override
-            public void setHttpRequest(HttpRequest request) {
-            }
-
-            @Override
-            public HttpResponse getHttpResponse() {
-                return null;
-            }
-
-            @Override
-            public void setHttpResponse(HttpResponse response) {
-            }
-
-            @Override
-            public UserSessionModel getUserSession() {
-                return null;
-            }
-
-            @Override
-            public void setUserSession(UserSessionModel userSession) {
-            }
-
-            @Override
-            public Token getBearerToken() {
-                return null;
-            }
-
-            @Override
-            public void setBearerToken(Token token) {
             }
 
             @Override
@@ -150,6 +83,77 @@ public class MockedKeycloakSession implements KeycloakSession {
 
             @Override
             public void setOrganization(OrganizationModel organization) {
+
+            }
+
+            @Override
+            public ClientConnection getConnection() {
+                return null;
+            }
+
+            @Override
+            public Locale resolveLocale(UserModel user) {
+                return null;
+            }
+
+            @Override
+            public AuthenticationSessionModel getAuthenticationSession() {
+                return null;
+            }
+
+            @Override
+            public void setAuthenticationSession(AuthenticationSessionModel authenticationSession) {
+
+            }
+
+            @Override
+            public HttpRequest getHttpRequest() {
+                return null;
+            }
+
+            @Override
+            public HttpResponse getHttpResponse() {
+                return null;
+            }
+
+            @Override
+            public void setConnection(ClientConnection clientConnection) {
+
+            }
+
+            @Override
+            public void setHttpRequest(HttpRequest httpRequest) {
+
+            }
+
+            @Override
+            public void setHttpResponse(HttpResponse httpResponse) {
+
+            }
+
+            @Override
+            public UserSessionModel getUserSession() {
+                return null;
+            }
+
+            @Override
+            public void setUserSession(UserSessionModel session) {
+
+            }
+
+            @Override
+            public Token getBearerToken() {
+                return null;
+            }
+
+            @Override
+            public void setBearerToken(Token token) {
+
+            }
+
+            @Override
+            public UserModel getUser() {
+                return null;
             }
         };
     }
@@ -285,6 +289,11 @@ public class MockedKeycloakSession implements KeycloakSession {
     }
 
     @Override
+    public IdentityProviderStorageProvider identityProviders() {
+        return null;
+    }
+
+    @Override
     public void close() {
 
     }
@@ -317,5 +326,10 @@ public class MockedKeycloakSession implements KeycloakSession {
     @Override
     public ClientPolicyManager clientPolicy() {
         return null;
+    }
+
+    @Override
+    public boolean isClosed() {
+        return false;
     }
 }
