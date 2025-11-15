@@ -47,7 +47,7 @@ public class WeiXinIdentityProviderFactory extends
             .property().name(WeiXinIdentityProvider.WECHAT_MP_APP_SECRET)
             .label("PC 用的公众号 App Secret")
             .helpText("当用户使用 PC 进行关注微信公众号即登录时，要使用的 app Secret，即微信公众号（不是开放平台）的 app secret。可以和上面的 Client Secret 一样，也可以不一样")
-            .type(ProviderConfigProperty.STRING_TYPE)
+            .type(ProviderConfigProperty.PASSWORD)
             .add()
             .property().name(WeiXinIdentityProvider.WECHAT_MP_APP_TOKEN)
             .label("PC 用的公众号 服务器配置的Token")
@@ -69,7 +69,7 @@ public class WeiXinIdentityProviderFactory extends
             .property().name(WeiXinIdentityProvider.OPEN_CLIENT_SECRET)
             .label("开放平台 Client Secret")
             .helpText("当用户使用微信开放平台登录时，要使用的 Client Secret，即微信开放平台的 app secret")
-            .type(ProviderConfigProperty.STRING_TYPE)
+            .type(ProviderConfigProperty.PASSWORD)
             .add()
             .property().name(WeiXinIdentityProvider.OPEN_CLIENT_ENABLED)
             .label("是否启用开放平台登录")
@@ -85,7 +85,7 @@ public class WeiXinIdentityProviderFactory extends
             .property().name(WeiXinIdentityProvider.WMP_APP_SECRET)
             .label("小程序 appSecret")
             .helpText("小程序的 app secret")
-            .type(ProviderConfigProperty.STRING_TYPE)
+            .type(ProviderConfigProperty.PASSWORD)
             .add()
 
             .build();
