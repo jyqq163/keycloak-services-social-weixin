@@ -13,6 +13,7 @@ import org.keycloak.models.IdentityProviderStorageProvider;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.services.resource.RealmResourceProvider;
 import org.keycloak.social.weixin.WeiXinIdentityProvider;
+import org.keycloak.social.weixin.WeiXinIdentityProviderFactory;
 import org.keycloak.social.weixin.cache.TicketStatusProvider;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
@@ -22,6 +23,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import static org.keycloak.broker.oidc.AbstractOAuth2IdentityProvider.OAUTH2_PARAMETER_REDIRECT_URI;
 import static org.keycloak.social.weixin.helpers.WechatMpHelper.isWechatMpMessage;
@@ -236,17 +238,19 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
     public Response message(
-            @QueryParam("signature") String signature,
-            @QueryParam("timestamp") String timestamp,
-            @QueryParam("nonce") String nonce,
-            String xmlData
+        @QueryParam("idpAlias") String idpAlias,
+        @QueryParam("signature") String signature,
+        @QueryParam("timestamp") String timestamp,
+        @QueryParam("nonce") String nonce,
+        String xmlData
     ) {
         logger.info("接收微信消息和事件" + xmlData);
-        logger.info("查询参数: signature=" + signature + ", timestamp=" + timestamp + ", nonce=" + nonce);
+        logger.info("查询参数: idpAlias=" + idpAlias + " signature=" + signature + ", timestamp=" + timestamp + ", nonce=" + nonce);
 
         // 获取配置的WECHAT_MP_APP_TOKEN
+        idpAlias = Optional.ofNullable(idpAlias).filter(s -> !s.isEmpty()).orElse(WeiXinIdentityProviderFactory.PROVIDER_ID);
         IdentityProviderStorageProvider idpStorage = session.getProvider(IdentityProviderStorageProvider.class);
-        IdentityProviderModel idpModel = idpStorage.getByAlias("weixin");
+        IdentityProviderModel idpModel = idpStorage.getByAlias(idpAlias);
         if (idpModel == null) {
             return Response.status(Response.Status.NOT_FOUND)
                     .entity("Identity Provider not found")
@@ -306,17 +310,19 @@ public class QrCodeResourceProvider implements RealmResourceProvider {
     @Path("message")
     @Produces(MediaType.APPLICATION_JSON)
     public Response message(
-            @QueryParam("echostr") String echostr, @QueryParam("signature") String signature,
-            @QueryParam("timestamp") String timestamp,
-            @QueryParam("nonce") String nonce,
-            String xmlData) {
+        @QueryParam("idpAlias") String idpAlias,
+        @QueryParam("echostr") String echostr, @QueryParam("signature") String signature,
+        @QueryParam("timestamp") String timestamp,
+        @QueryParam("nonce") String nonce,
+        String xmlData) {
 
         logger.info("接收到微信服务器发来的事件： " + xmlData);
-        logger.info("查询参数: signature=" + signature + ", timestamp=" + timestamp + ", nonce=" + nonce);
+        logger.info("查询参数: idpAlias=" + idpAlias + " signature=" + signature + ", timestamp=" + timestamp + ", nonce=" + nonce);
 
         // 获取配置的WECHAT_MP_APP_TOKEN
+        idpAlias = Optional.ofNullable(idpAlias).filter(s -> !s.isEmpty()).orElse(WeiXinIdentityProviderFactory.PROVIDER_ID);
         IdentityProviderStorageProvider idpStorage = session.getProvider(IdentityProviderStorageProvider.class);
-        IdentityProviderModel idpModel = idpStorage.getByAlias("weixin");
+        IdentityProviderModel idpModel = idpStorage.getByAlias(idpAlias);
         if (idpModel == null) {
             return Response.status(Response.Status.NOT_FOUND)
                     .entity("Identity Provider not found")
